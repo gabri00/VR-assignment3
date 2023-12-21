@@ -4,11 +4,11 @@
 
 [Power Point presentation of the assignment in class](/presentation.pptx)
 
-## workflow
+## Workflow
 
-- [ ] Generate Genoa's map (Cesium)
-- [ ] Set altitude limits (d-flight)
-- [ ] Introduce drones (AirSim)
+- [ ] Generate Genoa's map ([Cesium](https://cesium.com/platform/cesium-for-unreal/))
+- [ ] Set altitude limits ([d-flight](https://www.d-flight.it/new_portal/))
+- [ ] Introduce drones ([AirSim](https://microsoft.github.io/AirSim/) & [Colosseum](https://codexlabsllc.github.io/Colosseum/))
 - [ ] Path planning (SLAM)
  
 ## Useful material
