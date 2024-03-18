@@ -47,16 +47,20 @@ Form the Unreal editor create a `new C++ class`, leave everything as default, th
 Copy `Unreal\Plugins` into your project's folder and add the following lines in your `<project_name>.uproject`:
 
 ```json
-// In "Modules"
-"AdditionalDependencies": [
-    "AirSim"
+"Modules": [
+    {
+        "AdditionalDependencies": [
+            "AirSim"
+        ]
+    }
 ]
 
-// In "Plugins"
-{
-    "Name": "AirSim",
-    "Enabled": true
-}
+"Plugins": [
+    {
+        "Name": "AirSim",
+        "Enabled": true
+    }
+]
 ```
 
 Also add this line to the `Config\DefaultGame.ini` file in your project's directory:
