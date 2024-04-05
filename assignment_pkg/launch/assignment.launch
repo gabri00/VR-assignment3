@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+	<arg name="host" default="10.0.0.17" />
+
+   	<node name="test_node" pkg="assignment_pkg" type="flight_test.py" output="screen">
+   		<param name="host" type="string" value="$(arg host)" />
+   	</node>
+</launch>
