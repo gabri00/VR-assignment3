@@ -7,7 +7,7 @@ Final assignment of the Virtual Reality course at [UNIGE](https://unige.it/).
 | Name Surname | ID |
 | ------------ | -- |
 | [Gabriele Nicchiarelli](https://github.com/gabri00) | S4822677 |
-| [Ivan Terrile](https://github.com/Ivanterry00)      | S4851947 |
+| [Alessio Mura](https://github.com/alemuraa)      | S4861320 |
 
 ## Requirements
 
