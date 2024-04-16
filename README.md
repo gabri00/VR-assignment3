@@ -27,6 +27,8 @@ Open a terminal and run:
 ```bash
 pip install msgpack-rpc-python
 pip install airsim
+pip install geopandas
+pip install shapely
 ```
 
 #### Install Colosseum (on Windows)
