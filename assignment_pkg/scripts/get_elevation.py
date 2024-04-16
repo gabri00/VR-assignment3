@@ -3,19 +3,22 @@
 import rospy
 from assignment_pkg.srv import Elevation_srv, Elevation_srvResponse
 import requests
+import time
 
 
 def get_elevation(req):
 	api_url = 'https://api.open-elevation.com/api/v1/lookup?locations='
-	url = api_url + (str(req.latitude) + ',' + str(req.longitude))
+	url = api_url + str(req.latitude) + ',' + str(req.longitude)
 
 	res_srv = Elevation_srvResponse()
 	response = requests.get(url)
 
+	time.sleep(0.5)
+
 	if response.status_code == 200:
 		data = response.json()
 		if 'results' in data and len(data['results']) > 0:
-			res_srv.elevation = data['results']['elevation']
+			res_srv.elevation = float(data['results'][0]['elevation'])
 		else:
 			rospy.logerr("No results found for the provided coordinates.")
 			res_srv.elevation = -1
