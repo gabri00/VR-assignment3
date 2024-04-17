@@ -42,7 +42,7 @@ def check_gps(event):
 
 def main():
 	rospy.wait_for_service('elevation_srv')
-	rospy.init_node("drone_controller_node")
+	rospy.init_node("elevation_cli_node")
 	global client, restriction_areas, elevation_pub
 	
 	path_to_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'maps', 'flight_restriction_areas.kml')

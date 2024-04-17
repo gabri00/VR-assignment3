@@ -3,7 +3,6 @@
 import rospy
 from assignment_pkg.srv import Elevation_srv, Elevation_srvResponse
 import requests
-import time
 
 
 def get_elevation(req):
@@ -12,8 +11,6 @@ def get_elevation(req):
 
 	res_srv = Elevation_srvResponse()
 	response = requests.get(url)
-
-	time.sleep(0.5)
 
 	if response.status_code == 200:
 		data = response.json()
@@ -26,10 +23,12 @@ def get_elevation(req):
 		rospy.logerr("Error occurred while fetching data:", response.status_code)
 		res_srv.elevation = -1
 
+	return res_srv
+
 
 def main():
-	rospy.init_node("get_elevation_node")
-	rospy.Service("elevation_srv", Elevation_srv, get_elevation)
+	rospy.init_node("elevation_service_node")
+	s = rospy.Service("elevation_srv", Elevation_srv, get_elevation)
 	rospy.loginfo("Service is ready to provide elevation data.")
 	rospy.spin()
 
