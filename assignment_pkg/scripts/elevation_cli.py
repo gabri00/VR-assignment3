@@ -16,10 +16,10 @@ def check_gps(event):
 
 	# Get current GPS data
 	gps_data = client.getGpsData(gps_name = "", vehicle_name = "")
-	rospy.loginfo("Lat: %f, Long: %f, Alt: %f" % (gps_data.gnss.geo_point.latitude, gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.altitude))
+	rospy.loginfo("Lat: %f, Long: %f, Alt: %f" % (gps_data.gnss.geo_point.latitude, gps_data.gnss.geo_point.longitude, abs(gps_data.gnss.geo_point.altitude)))
 
 	# Check if the drone is within a flight restriction area, and if so, get the current altitude limit
-	is_in_area = restriction_areas.contains(Point(gps_data.gnss.geo_point.latitude, gps_data.gnss.geo_point.longitude))
+	is_in_area = restriction_areas.contains(Point(gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.latitude))
 	if is_in_area.any():
 		rospy.loginfo("Drone IN restriction area")
 		area_limit = int(restriction_areas[is_in_area]['Description'].iloc[0])
@@ -34,7 +34,7 @@ def check_gps(event):
 		rospy.logerr("Service call failed: %s" % e)
 
 	curr_limit = resp.elevation + area_limit
-	rospy.loginfo("Current altitude limit: %d" % curr_limit)
+	rospy.loginfo("Elevation: %d, Limit: %d, Total: %d" % (resp.elevation, area_limit, curr_limit))
 
 	# Publish current altitude limit
 	elevation_pub.publish(curr_limit)
@@ -58,9 +58,6 @@ def main():
 	host = rospy.get_param('~host')
 	client = airsim.MultirotorClient(ip=host, port=41451)
 	client.confirmConnection()
-	client.enableApiControl(True)
-	client.armDisarm(True)
-	client.takeoffAsync().join()
 
 	time.sleep(3)
 
