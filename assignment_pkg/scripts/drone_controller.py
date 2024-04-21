@@ -2,13 +2,7 @@
 
 import rospy
 from std_msgs.msg import Float64
-from assignment_pkg.srv import Elevation_srv, Elevation_srvRequest, Elevation_srvResponse
 import airsim
-import geopandas as gpd
-import fiona
-from shapely.geometry import Point
-import os
-import time
 
 
 def moveDrone_z(data):
@@ -16,7 +10,7 @@ def moveDrone_z(data):
 
 
 def main():
-	rospy.init_node("drone_controller_node")
+	rospy.init_node('drone_controller_node')
 	global client
 	
 	rospy.Subscriber('elevation', Float64, moveDrone_z)
@@ -29,7 +23,16 @@ def main():
 	client.armDisarm(True)
 	client.takeoffAsync().join()
 
+	# # Land the drone
+	# client.hoverAsync()
+	# client.landAsync()
+
+	# # Chiudi la connessione al client di AirSim
+	# client.reset()
+	# client.enableApiControl(False)
+
 	rospy.spin()
+
 
 if __name__ == '__main__':
 	main()
