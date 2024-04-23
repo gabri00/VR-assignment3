@@ -20,7 +20,7 @@ def get_elevation(req):
 			rospy.logerr('No results found for the provided coordinates.')
 			res_srv.elevation = -1
 	else:
-		rospy.logerr('Error occurred while fetching data:', response.status_code)
+		rospy.logerr('Error occurred while fetching data: %d', response.status_code)
 		res_srv.elevation = -1
 
 	return res_srv

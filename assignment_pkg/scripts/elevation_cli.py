@@ -62,7 +62,7 @@ def main():
 	time.sleep(3)
 
 	# Initialize timer to check GPS data
-	rospy.Timer(rospy.Duration(1), check_gps)
+	rospy.Timer(rospy.Duration(2), check_gps)
 
 	rospy.spin()
 
