@@ -6,11 +6,14 @@ class DroneEnvironment():
     def __init__(self,):
 
         # Initialize AirSim client
-	    host = rospy.get_param('~host')
-	    self.client = airsim.MultirotorClient(ip=host, port=41451)
-	    self.client.confirmConnection()
+	host = rospy.get_param('~host')
+	self.client = airsim.MultirotorClient(ip=host, port=41451)
+	self.client.confirmConnection()
 
+	# Parameters
         self.scaling_factor = 3.8 # action scaling factor
+        self.duration = 0.1 # seconds (Desired time to send this command for drivetrain)
+        self.max_altitude = -1.15
 
         # Goal setup
         object_id = "Wp1"
