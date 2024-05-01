@@ -5,7 +5,6 @@ import numpy as np
 
 
 class DroneEnvironment():
-
     def __init__(self, client):
         self.client = client
 
