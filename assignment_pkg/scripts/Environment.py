@@ -1,16 +1,18 @@
+#!/usr/bin/env python
+
 import airsim
 import numpy as np
 
+
 class DroneEnvironment():
-    
-    def __init__(self,):
 
+    def __init__(self):
         # Initialize AirSim client
-	host = rospy.get_param('~host')
-	self.client = airsim.MultirotorClient(ip=host, port=41451)
-	self.client.confirmConnection()
+        self.host = rospy.get_param('~host')
+        self.client = airsim.MultirotorClient(ip=host, port=41451)
+        self.client.confirmConnection()
 
-	# Parameters
+	    # Parameters
         self.scaling_factor = 3.8 # action scaling factor
         self.duration = 0.1 # seconds (Desired time to send this command for drivetrain)
         self.max_altitude = -1.15
@@ -26,8 +28,6 @@ class DroneEnvironment():
         self.initial_distance = self.calculate_distance(self.initial_position, self.goal)
 
 
-
-    
     def step(self, action, is_rate=True, angle_value=0):            
         # Interpret action
         self.interpret_action(action) # saves in self.quad_offset
@@ -63,9 +63,7 @@ class DroneEnvironment():
         return solved
 
     def calculate_distance(self, position_array, target_point):
-        """Get distance between current state and goal state"""
-        distance = np.linalg.norm(position_array - target_point, ord=2) # norm 2
-        return distance
+        return np.linalg.norm(position_array - target_point, ord=2) # norm 2
 
     # retrieve the estimated position and orientation of the multirotor.
     def current_position(self):
@@ -109,7 +107,6 @@ class DroneEnvironment():
 
 
     def interpret_action(self, action):
-        """Interprete action"""
         if action == 0:
             self.quad_offset = (self.scaling_factor, 0, 0)   # Move Forward (increase X)
         elif action == 1:
@@ -131,8 +128,8 @@ class DroneEnvironment():
             '30'    : self.client.getDistanceSensorData('Distance_30').distance,
             }
         return np.array(list(distance_sensorData.values()))
-    
-    
+
+
     def all_distance_sensors(self):
         distance_dict = {
             '0'     : self.client.getDistanceSensorData('Distance_0').distance, 

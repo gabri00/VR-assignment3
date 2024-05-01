@@ -1,7 +1,6 @@
-import os
+#!/usr/bin/env python
+
 import time
-import airsim
-import numpy as np
 
 class DronePathPlanning:
     def __init__(self):
@@ -14,9 +13,8 @@ class DronePathPlanning:
 
     def BugAlgorithm(self):
         # Implementazione dell'algoritmo Bug
-
-        prevoius_state = ""
-        current_state = "align_robot_heading"
+        prevoius_state = ''
+        current_state = 'align_robot_heading'
         theta_threshold = 4 
         sensor_noise = 0.82 # distance sensor of airsim has a gaussian noise and this value helps in reduce te noise impact on decision
         threshold_distance_obstacle = 5.0
@@ -25,7 +23,6 @@ class DronePathPlanning:
         start = time.time()
 
         while true:
-
             sensor_data = self.env.all_distance_sensors() # Retrieve all sensors data
             position, quaternion = self.env.current_position() # Retrieve current position & quaternion (orientation) data
             is_rate, angle_value = True, 0
@@ -51,23 +48,29 @@ class DronePathPlanning:
                 if distance < threshold_distance:
                     prevoius_state = current_state
                     current_state = 'wall'
-                
-            
+
 
         solved = self.env.step(action, is_rate, angle_value)
         time.sleep(0.25) # delay for correct movement
-            
+
         if solved:
             # Write log of training
             elapsed_time = abs(round(time.time() - start, 2))
             minutes = int(elapsed_time // 60)
             seconds = int(round(elapsed_time % 60, 2))
-            result = ("Navigation Done. "
-                          f"Time: {minutes}:{seconds}\n")
+            result = (f'Navigation Done. Time: {minutes}:{seconds}\n')
             print(result)
-            break
-            
+            return
 
-if __name__ == "__main__":
+
+def main():
+    rospy.init_node('bug_node')
+
     instance = DronePathPlanning()
     instance.BugAlgorithm()
+
+    rospy.spin()
+
+
+if __name__ == '__main__':
+    main()

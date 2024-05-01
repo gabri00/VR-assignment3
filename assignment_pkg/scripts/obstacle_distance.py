@@ -7,7 +7,6 @@ import time
 
 
 def check_obstacles(event):
-
 	# Get current Distance data
 	distance_sensor_data = client.getDistanceSensorData(distance_sensor_name = '', vehicle_name = '')
 
