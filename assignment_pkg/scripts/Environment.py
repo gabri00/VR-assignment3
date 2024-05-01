@@ -6,11 +6,8 @@ import numpy as np
 
 class DroneEnvironment():
 
-    def __init__(self):
-        # Initialize AirSim client
-        self.host = rospy.get_param('~host')
-        self.client = airsim.MultirotorClient(ip=host, port=41451)
-        self.client.confirmConnection()
+    def __init__(self, client):
+        self.client = client
 
 	    # Parameters
         self.scaling_factor = 3.8 # action scaling factor
