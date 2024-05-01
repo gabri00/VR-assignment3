@@ -115,23 +115,4 @@ class DroneEnvironment():
             self.quad_offset = (0, 0, self.scaling_factor*15)   # Rotate to Right (+)
         elif action == 5:
             self.quad_offset = (0, 0, -self.scaling_factor*15)  # Rotate to left (-)
-          
 
-    def dist_sensors(self):
-        distance_sensorData = {
-            '0'     : self.client.getDistanceSensorData('Distance_0').distance, 
-            '-30'   : self.client.getDistanceSensorData('Distance_M30').distance,
-            '30'    : self.client.getDistanceSensorData('Distance_30').distance,
-            }
-        return np.array(list(distance_sensorData.values()))
-
-
-    def all_distance_sensors(self):
-        distance_dict = {
-            '0'     : self.client.getDistanceSensorData('Distance_0').distance, 
-            '-30'   : self.client.getDistanceSensorData('Distance_M30').distance,
-            '-90'   : self.client.getDistanceSensorData('Distance_M90').distance,
-            '30'    : self.client.getDistanceSensorData('Distance_30').distance,
-            '90'   : self.client.getDistanceSensorData('Distance_90').distance,
-            }
-        return distance_dict

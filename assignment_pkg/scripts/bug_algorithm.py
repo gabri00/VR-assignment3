@@ -3,7 +3,7 @@
 import rospy
 import airsim
 import time
-
+from Environment import DroneEnvironment
 
 def angle_to_target(position, quaternion):
     angle_to_target = env.calculate_angle(position, quaternion, for_Mline=True)
@@ -20,8 +20,8 @@ def bugAlgorithm():
     env.client.simGetCollisionInfo().has_collided
     start = time.time()
 
-    while true:
-        sensor_data = env.all_distance_sensors() # Retrieve all sensors data
+    while True:
+        sensor_data = client.getDistanceSensorData(distance_sensor_name = '', vehicle_name = '').distance
         position, quaternion = env.current_position() # Retrieve current position & quaternion (orientation) data
         is_rate, angle_value = True, 0
 
@@ -62,7 +62,7 @@ def bugAlgorithm():
 
 
 def main():
-    global env
+    global env, client
 
     rospy.init_node('bug_node')
 
