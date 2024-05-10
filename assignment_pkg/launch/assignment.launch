@@ -7,18 +7,18 @@
 	<node name="controller_node" pkg="assignment_pkg" type="drone_controller.py" output="screen">
    		<param name="host" type="string" value="$(arg host)" />
 		<param name="port" type="int" value="$(arg port)" />
-		<param name="weather" type="string" value="rain" />
+		<param name="weather" type="string" value="" />
 		<param name="weather_value" type="double" value="0.25" />
    	</node>
 
-	<!-- <node name="elevation_cli_node" pkg="assignment_pkg" type="elevation_cli.py" output="screen">
+	<node name="elevation_cli_node" pkg="assignment_pkg" type="elevation_cli.py" output="screen">
 		<param name="host" type="string" value="$(arg host)" />
 		<param name="port" type="int" value="$(arg port)" />
 	</node>
    
 	<node name="elevation_service_node" pkg="assignment_pkg" type="elevation_service.py" output="screen" />
 
-	<node name="bug_node" pkg="assignment_pkg" type="bug_algorithm.py" output="screen">
+	<!-- <node name="bug_node" pkg="assignment_pkg" type="bug_algorithm.py" output="screen">
 		<param name="host" type="string" value="$(arg host)" />
 		<param name="port" type="int" value="$(arg port)" />
 	</node> -->

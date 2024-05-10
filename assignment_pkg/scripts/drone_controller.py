@@ -67,7 +67,11 @@ class DroneController:
 
 
 	def moveDrone_z(self, data):
-		self.client.moveToZAsync(-data.data, 1.0)
+		self.client.moveToZAsync(-data.data, 5.0).join()
+
+
+	def moveToPosition(self, lat, lon, alt):
+		self.client.moveToGPSAsync(lat, lon, -alt, 10.0).join()
 
 
 	def land(self):
@@ -82,6 +86,7 @@ class DroneController:
 
 def main():
 	drone_controller = DroneController('drone_controller_node')
+	drone_controller.moveToPosition(44.404023, 8.945463, 50)
 	rospy.spin()
 
 

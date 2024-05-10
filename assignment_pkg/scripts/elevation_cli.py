@@ -10,6 +10,13 @@ from shapely.geometry import Point
 import os
 import time
 
+from Logger import Logger
+
+
+class ElevationClient:
+	def __init__(self, node_name):
+		self._node_name = node_name
+		rospy.init_node(self._node_name)
 
 def check_gps(event):
 	global curr_limit
