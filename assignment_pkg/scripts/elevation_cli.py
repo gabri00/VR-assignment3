@@ -18,58 +18,79 @@ class ElevationClient:
 		self._node_name = node_name
 		rospy.init_node(self._node_name)
 
-def check_gps(event):
-	global curr_limit
+		# Init logger
+		self.__logger = Logger(self._node_name)
+		self.__logger.loginfo("Node started.")
 
-	# Get current GPS data
-	gps_data = client.getGpsData(gps_name = '', vehicle_name = '')
-	rospy.loginfo('Lat: %f, Long: %f, Alt: %f' % (gps_data.gnss.geo_point.latitude, gps_data.gnss.geo_point.longitude, abs(gps_data.gnss.geo_point.altitude)))
+		# Load parameters
+		self.__load_params()
 
-	# Check if the drone is within a flight restriction area, and if so, get the current altitude limit
-	is_in_area = restriction_areas.contains(Point(gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.latitude))
-	if is_in_area.any():
-		rospy.loginfo('Drone IN restriction area')
-		area_limit = int(restriction_areas[is_in_area]['Description'].iloc[0])
-	else:
-		area_limit = 120
-		rospy.loginfo('Drone NOT IN restriction area')
+		# Initialize AirSim client
+		self.__init_client()
 
-	try:
-		elevation_cli = rospy.ServiceProxy('elevation_srv', Elevation_srv)
-		resp = elevation_cli(float(gps_data.gnss.geo_point.latitude), float(gps_data.gnss.geo_point.longitude))
-	except rospy.ServiceException as e:
-		rospy.logerr('Service call failed: %s' % e)
+		# Wait for elevation service
+		rospy.wait_for_service('elevation_srv')
+		self.__logger.loginfo("Elevation service ready.")
 
-	curr_limit = resp.elevation + area_limit
-	rospy.loginfo('Elevation: %d, Limit: %d, Total: %d' % (resp.elevation, area_limit, curr_limit))
+		# Publishers
+		self.elevation_pub = rospy.Publisher('elevation', Float64, queue_size=1)
 
-	# Publish current altitude limit
-	elevation_pub.publish(curr_limit)
+		time.sleep(2)
+
+		# Initialize timer to check GPS data
+		rospy.Timer(rospy.Duration(1), self.check_gps)
+
+
+	def __load_params(self):
+		self.host = rospy.get_param('~host')
+		self.port = rospy.get_param('~port')
+
+		if not self.host or not self.port:
+			self.__logger.logerr("Host and port parameters are required.")
+			rospy.signal_shutdown("Host and port parameters are required.")
+
+
+	def __init_client(self):
+		self.client = airsim.MultirotorClient(ip=self.host, port=self.port)
+		self.client.confirmConnection()
+
+
+	def load_kml(self, filename):
+		path_to_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'maps', filename)
+		fiona.supported_drivers['KML'] = 'rw'
+		self.restriction_areas = gpd.read_file(path_to_file, driver='KML')
+
+
+	def check_gps(self, event):
+		# Get current GPS data
+		gps_data = self.client.getGpsData(gps_name = '', vehicle_name = '')
+		rospy.loginfo('Lat: %f, Long: %f, Alt: %f' % (gps_data.gnss.geo_point.latitude, gps_data.gnss.geo_point.longitude, abs(gps_data.gnss.geo_point.altitude)))
+
+		# Check if the drone is within a flight restriction area, and if so, get the current altitude limit
+		is_in_area = self.restriction_areas.contains(Point(gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.latitude))
+		if is_in_area.any():
+			self.__logger.logwarn('Drone IN restriction area')
+			area_limit = int(self.restriction_areas[is_in_area]['Description'].iloc[0])
+		else:
+			area_limit = 120
+			self.__logger.loginfo('Drone NOT IN restriction area')
+
+		try:
+			elevation_cli = rospy.ServiceProxy('elevation_srv', Elevation_srv)
+			resp = elevation_cli(float(gps_data.gnss.geo_point.latitude), float(gps_data.gnss.geo_point.longitude))
+		except rospy.ServiceException as e:
+			self.__logger.logerr('Service call failed: %s' % e)
+
+		curr_limit = resp.elevation + area_limit
+		self.__logger.loginfo('Elevation: %d, Limit: %d, Total: %d' % (resp.elevation, area_limit, curr_limit))
+
+		# Publish current altitude limit
+		self.elevation_pub.publish(curr_limit)
 
 
 def main():
-	rospy.wait_for_service('elevation_srv')
-	rospy.init_node('elevation_cli_node')
-	global client, restriction_areas, elevation_pub
-	
-	path_to_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'maps', 'flight_restriction_areas.kml')
-
-	# Load flight restriction areas
-	fiona.supported_drivers['KML'] = 'rw'
-	restriction_areas = gpd.read_file(path_to_file, driver='KML')
-
-	# Publishers
-	elevation_pub = rospy.Publisher('elevation', Float64, queue_size=10)
-
-	# Initialize AirSim client
-	host = rospy.get_param('~host')
-	client = airsim.MultirotorClient(ip=host, port=41451)
-	client.confirmConnection()
-
-	time.sleep(3)
-
-	# Initialize timer to check GPS data
-	rospy.Timer(rospy.Duration(2), check_gps)
+	elevation_cli = ElevationClient('elevation_cli')
+	elevation_cli.load_kml('flight_restriction_areas.kml')
 
 	rospy.spin()
 

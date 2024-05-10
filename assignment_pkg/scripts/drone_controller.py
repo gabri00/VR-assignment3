@@ -14,25 +14,18 @@ class DroneController:
 
 		# Init logger
 		self.__logger = Logger(self._node_name)
-
 		self.__logger.loginfo("Node started.")
 
 		# Load parameters
 		self.__load_params()
 		
 		# Initialize AirSim client
-		self.client = airsim.MultirotorClient(ip=self.host, port=self.port)
-		self.client.confirmConnection()
-		self.client.enableApiControl(True)
-		self.client.armDisarm(True)
-		self.client.takeoffAsync().join()
-
+		self.__init_client()
 		self.__logger.loginfo("Drone ready.")
 
 		# Set weather conditions
 		if self.weather:
 			self.__set_weather()
-			self.__logger.loginfo(f"Set weather to {self.weather} with value {self.weather_value}")
 
 		# Define subscribers
 		rospy.Subscriber('elevation', Float64, self.moveDrone_z)
@@ -49,6 +42,14 @@ class DroneController:
 			rospy.signal_shutdown("Host and port parameters are required.")
 
 
+	def __init_client(self):
+		self.client = airsim.MultirotorClient(ip=self.host, port=self.port)
+		self.client.confirmConnection()
+		self.client.enableApiControl(True)
+		self.client.armDisarm(True)
+		self.client.takeoffAsync().join()
+
+
 	def __set_weather(self):
 		self.client.simEnableWeather(True)
 
@@ -63,7 +64,14 @@ class DroneController:
 			"Dust": airsim.WeatherParameter.Dust,
 			"Fog": airsim.WeatherParameter.Fog,
 		}
-		self.client.simSetWeatherParameter(cond[self.weather], self.weather_value)
+
+		try:
+			self.client.simSetWeatherParameter(cond[self.weather], self.weather_value)
+		except KeyError:
+			self.__logger.logerr(f"Invalid weather condition: {self.weather}")
+			rospy.signal_shutdown(f"Invalid weather condition: {self.weather}")
+
+		self.__logger.loginfo(f"Set weather to {self.weather} with value {self.weather_value}")
 
 
 	def moveDrone_z(self, data):
