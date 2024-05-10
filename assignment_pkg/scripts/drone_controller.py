@@ -2,7 +2,8 @@
 
 import rospy
 import airsim
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
+import time
 
 from Logger import Logger
 
@@ -29,6 +30,11 @@ class DroneController:
 
 		# Define subscribers
 		rospy.Subscriber('elevation', Float64, self.moveDrone_z)
+		rospy.Subscriber('ack_move', Bool, self.ack_callback)
+		
+		# Init variables
+		self.curr_alt = 0.0
+		self.can_move = False
 
 
 	def __load_params(self):
@@ -74,12 +80,21 @@ class DroneController:
 		self.__logger.loginfo(f"Set weather to {self.weather} with value {self.weather_value}")
 
 
+	def ack_callback(self, data):
+		self.can_move = data.data
+
+
 	def moveDrone_z(self, data):
-		self.client.moveToZAsync(-data.data, 5.0).join()
+		self.curr_alt = -data.data
+		self.client.moveToZAsync(-data.data, 1.5).join()
+
+		if self.can_move:
+			self.moveToPosition(44.404023, 8.945463)
 
 
-	def moveToPosition(self, lat, lon, alt):
-		self.client.moveToGPSAsync(lat, lon, -alt, 10.0).join()
+	def moveToPosition(self, lat, lon):
+		self.__logger.loginfo(f"{self.can_move}!!!!!!!!!")
+		self.client.moveToGPSAsync(lat, lon, self.curr_alt, 5.0)
 
 
 	def land(self):
@@ -94,7 +109,6 @@ class DroneController:
 
 def main():
 	drone_controller = DroneController('drone_controller_node')
-	drone_controller.moveToPosition(44.404023, 8.945463, 50)
 	rospy.spin()
 
 

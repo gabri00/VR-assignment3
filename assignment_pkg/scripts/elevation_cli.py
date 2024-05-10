@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from assignment_pkg.srv import Elevation_srv, Elevation_srvRequest, Elevation_srvResponse
 import airsim
 import geopandas as gpd
@@ -34,11 +34,12 @@ class ElevationClient:
 
 		# Publishers
 		self.elevation_pub = rospy.Publisher('elevation', Float64, queue_size=1)
+		self.move_ack_pub = rospy.Publisher('ack_move', Bool, queue_size=1)
 
 		time.sleep(2)
 
 		# Initialize timer to check GPS data
-		rospy.Timer(rospy.Duration(1), self.check_gps)
+		rospy.Timer(rospy.Duration(5), self.check_gps)
 
 
 	def __load_params(self):
@@ -64,7 +65,7 @@ class ElevationClient:
 	def check_gps(self, event):
 		# Get current GPS data
 		gps_data = self.client.getGpsData(gps_name = '', vehicle_name = '')
-		rospy.loginfo('Lat: %f, Long: %f, Alt: %f' % (gps_data.gnss.geo_point.latitude, gps_data.gnss.geo_point.longitude, abs(gps_data.gnss.geo_point.altitude)))
+		self.__logger.loginfo('Lat: %f, Long: %f, Alt: %f' % (gps_data.gnss.geo_point.latitude, gps_data.gnss.geo_point.longitude, abs(gps_data.gnss.geo_point.altitude)))
 
 		# Check if the drone is within a flight restriction area, and if so, get the current altitude limit
 		is_in_area = self.restriction_areas.contains(Point(gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.latitude))
@@ -86,6 +87,11 @@ class ElevationClient:
 
 		# Publish current altitude limit
 		self.elevation_pub.publish(curr_limit)
+		
+		if abs(gps_data.gnss.geo_point.altitude) >= curr_limit - 3.0:
+			self.move_ack_pub.publish(True)
+		else:
+			self.move_ack_pub.publish(True)
 
 
 def main():
