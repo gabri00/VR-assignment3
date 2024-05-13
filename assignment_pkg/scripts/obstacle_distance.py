@@ -14,11 +14,11 @@ def check_obstacles(event):
     global code
 	
     if code == 1:
-        distance_sensor_data = client.getDistanceSensorData(distance_sensor_name='Distance_0', vehicle_name='')
+        distance_sensor_data = client.getDistanceSensorData('Distance_0')
     elif code == 2:
-        distance_sensor_data = client.getDistanceSensorData(distance_sensor_name='Distance_M90', vehicle_name='')
+        distance_sensor_data = client.getDistanceSensorData('Distance_M90')
     elif code == 3:
-        distance_sensor_data = client.getDistanceSensorData(distance_sensor_name='Distance_90', vehicle_name='')
+        distance_sensor_data = client.getDistanceSensorData('Distance_90')
     else:
         rospy.logwarn("Unknown sensor code: %d", code)
         return
