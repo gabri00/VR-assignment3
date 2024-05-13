@@ -11,8 +11,8 @@ import time
 # Code = 3: left sensor
 
 def check_obstacles(event):
-
-	global code
+    global code
+	
     if code == 1:
         distance_sensor_data = client.getDistanceSensorData(distance_sensor_name='Distance_0', vehicle_name='')
     elif code == 2:
@@ -33,7 +33,8 @@ def check_obstacles(event):
 
 
 def sensor_code_callback(msg):
-     global code
+    global code
+	
     rospy.loginfo('Sensor code received: %f', msg.data)
     code = msg.data
 
