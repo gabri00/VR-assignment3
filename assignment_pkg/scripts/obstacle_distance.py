@@ -24,12 +24,12 @@ def check_obstacles(event):
         return
 
 
-	# Get current Distance data
-	distance_condition = distance_sensor_data.max_distance - distance_sensor_data.min_distance - sensor_noise
+    # Get current Distance data
+    distance_condition = distance_sensor_data.max_distance - distance_sensor_data.min_distance - sensor_noise
 	
-	# Publish current obstacle distance
-	rospy.loginfo('Distance from obstacle: %f', distance_sensor_data.distance)
-	distance_pub.publish(distance_sensor_data.distance)
+    # Publish current obstacle distance
+    rospy.loginfo('Distance from obstacle: %f', distance_condition)
+    distance_pub.publish(distance_condition)
 
 
 def sensor_code_callback(msg):
