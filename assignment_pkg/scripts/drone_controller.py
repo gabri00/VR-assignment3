@@ -3,6 +3,7 @@
 import rospy
 import airsim
 from std_msgs.msg import Float64, Bool
+from assignment_pkg.msg import DistData
 import time
 
 from Logger import Logger
@@ -31,10 +32,13 @@ class DroneController:
 		# Define subscribers
 		rospy.Subscriber('elevation', Float64, self.moveDrone_z)
 		rospy.Subscriber('ack_move', Bool, self.ack_callback)
+		rospy.Subscriber('distance_data', DistData, self.dist_sens_callback)
 		
 		# Init variables
 		self.curr_alt = 0.0
 		self.can_move = False
+		self.obst_thresh = 5.0
+		self.state = 'drone_ready'
 
 
 	def __load_params(self):
@@ -93,7 +97,6 @@ class DroneController:
 
 
 	def moveToPosition(self, lat, lon):
-		self.__logger.loginfo(f"{self.can_move}!!!!!!!!!")
 		self.client.moveToGPSAsync(lat, lon, self.curr_alt, 5.0)
 
 
@@ -105,7 +108,18 @@ class DroneController:
 	def close(self):
 		self.client.reset()
 		self.client.enableApiControl(False)
-	
+
+
+	def dist_sens_callback(self, data):
+		self.__logger.loginfo(f"Distance sensors: front={data.data_front}, left={data.data_left}, right={data.data_right}")
+		
+		if data.data_front < self.obst_thresh:
+			self.state = 'obst_front'
+		if data.data_left < self.obst_thresh:
+			self.state = 'obst_left'
+		if data.data_right < self.obst_thresh:
+			self.state = 'obst_right'
+
 
 def main():
 	drone_controller = DroneController('drone_controller_node')

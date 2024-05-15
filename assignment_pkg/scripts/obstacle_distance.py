@@ -2,66 +2,66 @@
 
 import rospy
 from std_msgs.msg import Float64, Int64
+from assignment_pkg.msg import DistData
 import airsim
 import time
 
-# Define the meaning of sensor codes
-# Code = 1: front sensor 
-# Code = 2: right sensor
-# Code = 3: left sensor
+from Logger import Logger
 
-def check_obstacles(event):
-    global code
-	
-    if code == 1:
-        distance_sensor_data = client.getDistanceSensorData('Distance_0')
-    elif code == 2:
-        distance_sensor_data = client.getDistanceSensorData('Distance_M90')
-    elif code == 3:
-        distance_sensor_data = client.getDistanceSensorData('Distance_90')
-    else:
-        rospy.logwarn("Unknown sensor code: %d", code)
-        return
+class DistanceControl:
+	def __init__(self, node_name):
+		self._node_name = node_name
+		rospy.init_node(self._node_name)
 
+		# Init logger
+		self.__logger = Logger(self._node_name)
+		self.__logger.loginfo("Node started.")
 
-    # Get current Distance data
-    distance_condition = distance_sensor_data.max_distance - distance_sensor_data.min_distance - sensor_noise
-	
-    # Publish current obstacle distance
-    rospy.loginfo('Distance from obstacle: %f', distance_condition)
-    distance_pub.publish(distance_condition)
+		# Load parameters
+		self.__load_params()
+		
+		# Initialize AirSim client
+		self.__init_client()
+		
+		self.dist_pub = rospy.Publisher('distance_data', DistData, queue_size=10)
+		
+		time.sleep(2)
+
+		rospy.Timer(rospy.Duration(2), self.get_dist_data)
 
 
-def sensor_code_callback(msg):
-    global code
-	
-    rospy.loginfo('Sensor code received: %f', msg.data)
-    code = msg.data
+	def __load_params(self):
+		self.host = rospy.get_param('~host')
+		self.port = rospy.get_param('~port')
+
+		if not self.host or not self.port:
+			self.__logger.logerr("Host and port parameters are required.")
+			rospy.signal_shutdown("Host and port parameters are required.")
+
+
+	def __init_client(self):
+		self.client = airsim.MultirotorClient(ip=self.host, port=self.port)
+		self.client.confirmConnection()
+		self.client.enableApiControl(True)
+		self.client.armDisarm(True)
+		self.client.takeoffAsync().join()
+
+
+	def get_dist_data(self, event):
+		self.dist_front = self.client.getDistanceSensorData('Distance_front').distance
+		self.dist_left = self.client.getDistanceSensorData('Distance_left').distance
+		self.dist_right = self.client.getDistanceSensorData('Distance_right').distance
+		
+		# Publish msg
+		msg = DistData()
+		msg.data_front = self.dist_front
+		msg.data_left = self.dist_left
+		msg.data_right = self.dist_right
+		self.dist_pub.publish(msg)
+
 
 def main():
-	global client, distance_pub
-
-	rospy.init_node('distance_sensor_node')
-
-	# Initialize sensor noise
-    sensor_noise = 0.82
-
-	# Publishers
-	distance_pub = rospy.Publisher('distance_data', Float64, queue_size=10)
-
-	# Subscribers
-    rospy.Subscriber('sensor_code', Int64, sensor_code_callback)
-
-	# Initialize AirSim client
-	host = rospy.get_param('~host')
-	client = airsim.MultirotorClient(ip=host, port=41451)
-	client.confirmConnection()
-
-	time.sleep(3)
-
-	# Initialize timer to check obstacles distance
-	rospy.Timer(rospy.Duration(2), check_obstacles)
-
+	DistanceControl('distance_control_node')
 	rospy.spin()
 
 
