@@ -3,6 +3,9 @@
 <launch>
 	<arg name="host" default="10.0.0.17" />
 	<arg name="port" default="41451" />
+	<param name="/vehicle_name" value="Drone" />
+
+	<!--<include file="$(find airsim_ros_pkgs)/launch/airsim_with_simple_PD_position_controller.launch"/>-->
 
 	<node name="controller_node" pkg="assignment_pkg" type="drone_controller.py" output="screen">
    		<param name="host" type="string" value="$(arg host)" />
@@ -11,7 +14,7 @@
 		<param name="weather_value" type="double" value="0.25" />
    	</node>
 
-	<node name="elevation_cli_node" pkg="assignment_pkg" type="elevation_cli.py" output="screen">
+	<!--<node name="elevation_cli_node" pkg="assignment_pkg" type="elevation_cli.py" output="screen">
 		<param name="host" type="string" value="$(arg host)" />
 		<param name="port" type="int" value="$(arg port)" />
 	</node>
@@ -21,5 +24,5 @@
 	<node name="distance_control_node" pkg="assignment_pkg" type="obstacle_distance.py" output="screen">
 		<param name="host" type="string" value="$(arg host)" />
 		<param name="port" type="int" value="$(arg port)" />
-	</node>
+	</node>-->
 </launch>

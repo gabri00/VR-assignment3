@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  nav_msgs
+  airsim_ros_pkgs
   message_generation
 )
 
@@ -104,7 +106,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES assignment_pkg
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+  CATKIN_DEPENDS roscpp rospy std_msgs nav_msgs airsim_ros_pkgs message_runtime
 #  DEPENDS system_lib
 )
 
