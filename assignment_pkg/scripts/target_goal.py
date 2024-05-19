@@ -54,11 +54,11 @@ class PlanningGoal:
 
 		while not rospy.is_shutdown():
 	  
-		    self.target_long = rospy.get_param('~target_long')
+		        self.target_long = rospy.get_param('~target_long')
 			self.target_lat = rospy.get_param('~target_lat')
    
 			# Create the goal position that the drone has to reach
-	,       self.goal = assignment_pkg.msg.PlanningGoal()
+	,               self.goal = assignment_pkg.msg.PlanningGoal()
 			self.goal.latitude = self.target_lat
 			self.goal.longitude = self.target_long
 			
