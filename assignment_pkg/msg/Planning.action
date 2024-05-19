@@ -1,0 +1,6 @@
+float64 target_lat
+float64 target_long
+---
+---
+float64 current_lat
+float64 current_long
