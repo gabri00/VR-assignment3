@@ -25,7 +25,7 @@ class PlanningGoal:
 		
 		time.sleep(2)
 
-		rospy.Timer(rospy.Duration(2), self.target_goal)
+		self.target_goal()
 
 
 	def __load_params(self):
@@ -45,7 +45,7 @@ class PlanningGoal:
 		self.client.takeoffAsync().join()
 
 
-	def target_goal(self, event):
+	def target_goal(self):
 		# Create the action client
 		self.client_action = actionlib.SimpleActionClient('target_point', assignment_pkg.msg.PlanningAction)
     
@@ -54,14 +54,13 @@ class PlanningGoal:
 
 		while not rospy.is_shutdown():
 	  
-		        self.target_long = rospy.get_param('~target_long')
+			self.target_long = rospy.get_param('~target_long')
 			self.target_lat = rospy.get_param('~target_lat')
    
 			# Create the goal position that the drone has to reach
-	,               self.goal = assignment_pkg.msg.PlanningGoal()
+			self.goal = assignment_pkg.msg.PlanningGoal()
 			self.goal.latitude = self.target_lat
 			self.goal.longitude = self.target_long
-			
 
 			# Send the goal to the server
 			self.client_action.send_goal(goal)

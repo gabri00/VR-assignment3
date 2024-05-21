@@ -35,25 +35,26 @@ class DroneController:
 			self.__set_weather()
 
 		# Define subscribers
-		# rospy.Subscriber('elevation', Float64, self.moveDrone_z)
+		rospy.Subscriber('/elevation', Float64, self.updateElevation)
 		# rospy.Subscriber('ack_move', Bool, self.ack_callback)
 		# rospy.Subscriber('distance_data', DistData, self.dist_sens_callback)
-		self.home_pub = rospy.Publisher('/airsim_node/home_geo_point', GPSYaw, queue_size=10)
-		self.odom_pub = rospy.Publisher('/airsim_node/Drone/odom_local_ned', Odometry, queue_size=10)
+		# self.home_pub = rospy.Publisher('/airsim_node/home_geo_point', GPSYaw, queue_size=10)
+		# self.odom_pub = rospy.Publisher('/airsim_node/Drone/odom_local_ned', Odometry, queue_size=10)
 
-		time.sleep(1)
-		self.set_home_geo()
+		# time.sleep(1)
+		# self.set_home_geo()
 
 		# Init variables
 		self.curr_alt = 0.0
+		self.prev_alt = 0.0
 		self.can_move = False
 		self.obst_thresh = 5.0
 		self.state = 'drone_ready'
 		
-		time.sleep(1)
-		self.set_goal()
+		# time.sleep(1)
+		# self.set_goal()
 
-		rospy.Timer(rospy.Duration(1), self.set_odom)
+		# rospy.Timer(rospy.Duration(1), self.set_odom)
 
 
 	def __load_params(self):
@@ -134,12 +135,11 @@ class DroneController:
 		self.can_move = data.data
 
 
-	def moveDrone_z(self, data):
+	def updateElevation(self, data):
 		self.curr_alt = -data.data
-		self.client.moveToZAsync(-data.data, 1.5).join()
-
-		if self.can_move:
-			self.moveToPosition(44.404023, 8.945463)
+		if self.curr_alt != self.prev_alt:
+			self.client.moveToZAsync(self.curr_alt-5.0, 1.5).join()
+			self.prev_alt = self.curr_alt
 
 
 	def moveToPosition(self, lat, lon):
