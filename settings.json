@@ -1,46 +1,46 @@
 {
-  "SeeDocsAt": "https://github.com/Microsoft/AirSim/blob/main/docs/settings.md",
-  "SettingsVersion": 1.2,
-  "SimMode": "Multirotor",
-  "LocalHostIp": "10.0.0.17",
-  "ApiServerPort": 41451,
-  "Vehicles": {
-    "Drone": {
-      "VehicleType": "SimpleFlight",
-	"Sensors": {
-    		"Distance_front": {
-        		"SensorType": 5,
-        		"Enabled" : true,
-        		"MinDistance": 0.2,
-        		"MaxDistance": 40,
-        		"X": 0, "Y": 0, "Z": -1,
-        		"Yaw": 0, "Pitch": 0, "Roll": 0,
-        		"DrawDebugPoints": true
-    		},
-    		"Distance_left": {
-        		"SensorType": 5,
-        		"Enabled" : true,
-        		"MinDistance": 0.2,
-        		"MaxDistance": 40,
-        		"X": 0, "Y": 0, "Z": -1,
-        		"Yaw": 90, "Pitch": 0, "Roll": 0,
-        		"DrawDebugPoints": true
-    		},
-    		"Distance_right": {
-        		"SensorType": 5,
-        		"Enabled" : true,
-        		"MinDistance": 0.2,
-        		"MaxDistance": 40,
-        		"X": 0, "Y": 0, "Z": -1,
-        		"Yaw": -90, "Pitch": 0, "Roll": 0,
-        		"DrawDebugPoints": true
-    		}
+	"SeeDocsAt": "https://github.com/Microsoft/AirSim/blob/main/docs/settings.md",
+	"SettingsVersion": 1.2,
+	"SimMode": "Multirotor",
+	"LocalHostIp": "10.0.0.17",
+	"ApiServerPort": 41451,
+	"Vehicles": {
+		"Drone": {
+			"VehicleType": "SimpleFlight",
+			"Sensors": {
+				"Distance_front": {
+					"SensorType": 5,
+					"Enabled" : true,
+					"MinDistance": 0.2,
+					"MaxDistance": 40,
+					"X": 0, "Y": 0, "Z": -1,
+					"Yaw": 0, "Pitch": 0, "Roll": 0,
+					"DrawDebugPoints": false
+				},
+				"Distance_left": {
+					"SensorType": 5,
+					"Enabled" : true,
+					"MinDistance": 0.2,
+					"MaxDistance": 40,
+					"X": 0, "Y": 0, "Z": -1,
+					"Yaw": 90, "Pitch": 0, "Roll": 0,
+					"DrawDebugPoints": false
+				},
+				"Distance_right": {
+					"SensorType": 5,
+					"Enabled" : true,
+					"MinDistance": 0.2,
+					"MaxDistance": 40,
+					"X": 0, "Y": 0, "Z": -1,
+					"Yaw": -90, "Pitch": 0, "Roll": 0,
+					"DrawDebugPoints": false
+				}
+			}
+		}
+	},
+	"OriginGeopoint": {
+		"Latitude": 44.395398,
+		"Longitude": 8.944152,
+		"Altitude": 0
 	}
-    }
-  },
-  "OriginGeopoint": {
-    "Latitude": 44.395398,
-    "Longitude": 8.944152,
-    "Altitude": 0
-  }
 }

@@ -3,13 +3,13 @@
 import rospy
 from std_msgs.msg import Float64, Bool
 from assignment_pkg.srv import Elevation_srv, Elevation_srvRequest, Elevation_srvResponse
-import airsim
 import geopandas as gpd
 import fiona
 from shapely.geometry import Point
 import os
 import time
 
+from AirSimWrapper import AirSimWrapper
 from Logger import Logger
 
 
@@ -25,8 +25,10 @@ class ElevationClient:
 		# Load parameters
 		self.__load_params()
 
-		# Initialize AirSim client
-		self.__init_client()
+		# Initialize AirSim wrapper
+		self.airsim = AirSimWrapper(self.host, self.port)
+		self.airsim.takeoff()
+		self.__logger.loginfo("Drone ready.")
 
 		# Wait for elevation service
 		rospy.wait_for_service('elevation_srv')
@@ -49,11 +51,6 @@ class ElevationClient:
 		if not self.host or not self.port:
 			self.__logger.logerr("Host and port parameters are required.")
 			rospy.signal_shutdown("Host and port parameters are required.")
-
-
-	def __init_client(self):
-		self.client = airsim.MultirotorClient(ip=self.host, port=self.port)
-		self.client.confirmConnection()
 
 
 	def load_kml(self, filename):
@@ -87,11 +84,6 @@ class ElevationClient:
 
 		# Publish current altitude limit
 		self.elevation_pub.publish(curr_limit)
-		
-		# if abs(gps_data.gnss.geo_point.altitude) >= curr_limit - 3.0:
-		# 	self.move_ack_pub.publish(True)
-		# else:
-		# 	self.move_ack_pub.publish(True)
 
 
 def main():
