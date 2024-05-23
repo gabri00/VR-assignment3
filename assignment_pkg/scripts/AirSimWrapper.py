@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+# from __future__ import print_function
 import airsim
 
 class AirSimWrapper:
@@ -64,3 +67,10 @@ class AirSimWrapper:
 
     def get_distance_reading(self, sensor_name):
         return self.client.getDistanceSensorData(sensor_name).distance
+
+    def get_gps_data(self):
+        return self.client.getGpsData(gps_name = '', vehicle_name = '')
+
+    def move_z(self, pos):
+        self.client.moveToZAsync(pos, 1.5)
+

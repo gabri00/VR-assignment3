@@ -27,8 +27,6 @@ class ElevationClient:
 
 		# Initialize AirSim wrapper
 		self.airsim = AirSimWrapper(self.host, self.port)
-		self.airsim.takeoff()
-		self.__logger.loginfo("Drone ready.")
 
 		# Wait for elevation service
 		rospy.wait_for_service('elevation_srv')
@@ -61,7 +59,7 @@ class ElevationClient:
 
 	def check_gps(self, event):
 		# Get current GPS data
-		gps_data = self.client.getGpsData(gps_name = '', vehicle_name = '')
+		gps_data = self.airsim.get_gps_data()
 		# self.__logger.loginfo('Lat: %f, Long: %f, Alt: %f' % (gps_data.gnss.geo_point.latitude, gps_data.gnss.geo_point.longitude, abs(gps_data.gnss.geo_point.altitude)))
 
 		# Check if the drone is within a flight restriction area, and if so, get the current altitude limit

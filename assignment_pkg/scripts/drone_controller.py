@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-# from __future__ import print_function
 import math
 import time
 
@@ -141,13 +140,14 @@ class DroneController:
 	def update_elevation(self, data):
 		self.curr_alt = -data.data
 		if self.curr_alt != self.prev_alt:
-			self.client.moveToZAsync(self.curr_alt-5.0, 1.5).join()
+			self.airsim.move_z(self.curr_alt-5.0)
+			time.sleep(3)
 			self.prev_alt = self.curr_alt
 
 
 	def control_loop(self):
 		curr_pos = self.airsim.get_drone_position()
-		goal_pos = [10.0, 10.0, 0.0]
+		goal_pos = [90.47, 39.54, self.curr_alt]
 
 		yaw = math.atan2(goal_pos[1] - curr_pos[1], goal_pos[0] - curr_pos[0]) * 180 / math.pi
 		self.airsim.set_yaw(yaw)
