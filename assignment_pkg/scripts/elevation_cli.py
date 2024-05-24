@@ -33,13 +33,12 @@ class ElevationClient:
 		self.__logger.loginfo("Elevation service ready.")
 
 		# Publishers
-		self.elevation_pub = rospy.Publisher('/elevation', Float64, queue_size=1)
-		self.move_ack_pub = rospy.Publisher('ack_move', Bool, queue_size=1)
+		self.elevation_pub = rospy.Publisher('/elevation_limit', Float64, queue_size=1)
 
-		time.sleep(2)
+		time.sleep(1)
 
 		# Initialize timer to check GPS data
-		rospy.Timer(rospy.Duration(2), self.check_gps)
+		rospy.Timer(rospy.Duration(5), self.check_gps)
 
 
 	def __load_params(self):
@@ -60,7 +59,7 @@ class ElevationClient:
 	def check_gps(self, event):
 		# Get current GPS data
 		gps_data = self.airsim.get_gps_data()
-		# self.__logger.loginfo('Lat: %f, Long: %f, Alt: %f' % (gps_data.gnss.geo_point.latitude, gps_data.gnss.geo_point.longitude, abs(gps_data.gnss.geo_point.altitude)))
+		self.__logger.loginfo(f'Current altitude: {abs(gps_data.gnss.geo_point.altitude)}')
 
 		# Check if the drone is within a flight restriction area, and if so, get the current altitude limit
 		is_in_area = self.restriction_areas.contains(Point(gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.latitude))
@@ -69,7 +68,6 @@ class ElevationClient:
 			area_limit = int(self.restriction_areas[is_in_area]['Description'].iloc[0])
 		else:
 			area_limit = 120
-			self.__logger.loginfo('Drone NOT IN restriction area')
 
 		try:
 			elevation_cli = rospy.ServiceProxy('elevation_srv', Elevation_srv)
@@ -78,7 +76,7 @@ class ElevationClient:
 			self.__logger.logerr('Service call failed: %s' % e)
 
 		curr_limit = resp.elevation + area_limit
-		self.__logger.loginfo('Elevation: %d, Limit: %d, Total: %d' % (resp.elevation, area_limit, curr_limit))
+		self.__logger.loginfo(f'Max elevation: {curr_limit}')
 
 		# Publish current altitude limit
 		self.elevation_pub.publish(curr_limit)

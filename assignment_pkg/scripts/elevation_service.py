@@ -4,32 +4,46 @@ import rospy
 from assignment_pkg.srv import Elevation_srv, Elevation_srvResponse
 import requests
 
+from Logger import Logger
 
-def get_elevation(req):
-	api_url = 'https://api.open-elevation.com/api/v1/lookup?locations='
-	url = api_url + str(req.latitude) + ',' + str(req.longitude)
 
-	res_srv = Elevation_srvResponse()
-	response = requests.get(url)
+class ElevationService:
+	def __init__(self, node_name):
+		self._node_name = node_name
+		rospy.init_node(self._node_name)
 
-	if response.status_code == 200:
-		data = response.json()
-		if 'results' in data and len(data['results']) > 0:
-			res_srv.elevation = float(data['results'][0]['elevation'])
+		# Init logger
+		self.__logger = Logger(self._node_name)
+		self.__logger.loginfo("Node started.")
+
+		# Init service
+		s = rospy.Service('elevation_srv', Elevation_srv, self.get_elevation)
+		self.__logger.loginfo('Service is ready to provide data.')
+
+
+	def get_elevation(self, req):
+		api_url = 'https://api.open-elevation.com/api/v1/lookup?locations='
+		url = api_url + str(req.latitude) + ',' + str(req.longitude)
+
+		res_srv = Elevation_srvResponse()
+		response = requests.get(url)
+
+		if response.status_code == 200:
+			data = response.json()
+			if 'results' in data and len(data['results']) > 0:
+				res_srv.elevation = float(data['results'][0]['elevation'])
+			else:
+				self.__logger.logerr('No results found for the provided coordinates.')
+				res_srv.elevation = -1
 		else:
-			rospy.logerr('No results found for the provided coordinates.')
+			self.__logger.logerr('Error occurred while fetching data: %d', response.status_code)
 			res_srv.elevation = -1
-	else:
-		rospy.logerr('Error occurred while fetching data: %d', response.status_code)
-		res_srv.elevation = -1
 
-	return res_srv
+		return res_srv
 
 
 def main():
-	rospy.init_node('elevation_service_node')
-	s = rospy.Service('elevation_srv', Elevation_srv, get_elevation)
-	rospy.loginfo('Service is ready to provide elevation data.')
+	ElevationService('elevation_service')
 	rospy.spin()
 
 
