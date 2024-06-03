@@ -13,7 +13,7 @@
 					"Enabled" : true,
 					"MinDistance": 0.2,
 					"MaxDistance": 40,
-					"X": 0, "Y": 0, "Z": -1,
+					"X": 0, "Y": 0, "Z": -0.4,
 					"Yaw": 0, "Pitch": 0, "Roll": 0,
 					"DrawDebugPoints": false
 				},
@@ -22,7 +22,7 @@
 					"Enabled" : true,
 					"MinDistance": 0.2,
 					"MaxDistance": 40,
-					"X": 0, "Y": 0, "Z": -1,
+					"X": 0, "Y": -0.4, "Z": 0,
 					"Yaw": 90, "Pitch": 0, "Roll": 0,
 					"DrawDebugPoints": false
 				},
@@ -31,7 +31,7 @@
 					"Enabled" : true,
 					"MinDistance": 0.2,
 					"MaxDistance": 40,
-					"X": 0, "Y": 0, "Z": -1,
+					"X": 0, "Y": 0.4, "Z": 0,
 					"Yaw": -90, "Pitch": 0, "Roll": 0,
 					"DrawDebugPoints": false
 				}

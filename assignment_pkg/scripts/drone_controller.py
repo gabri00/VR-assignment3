@@ -84,14 +84,23 @@ class DroneController:
 		# Loop while drone is far from goal
 		while np.linalg.norm(np.array(curr_pos) - np.array(goal_pos)) > self.goal_threshold:
 			# Read distance sensors data
-			dist = self.airsim.get_distance_reading('Distance_front')
+			dist_front = self.airsim.get_distance_reading('Distance_front')
+			dist_right = self.airsim.get_distance_reading('Distance_right')
+			dist_left = self.airsim.get_distance_reading('Distance_left')
 
 			# While drone is near an obstacle, turn
-			while dist < self.obst_threshold:
-				self.airsim.set_yaw(yaw + self.yaw_step)
+			while dist_front < self.obst_threshold:
+				# self.airsim.set_yaw(yaw + self.yaw_step)
+				if dist_right > dist_left:
+					self.airsim.set_yaw(yaw + self.yaw_step)
+				else:
+					self.airsim.set_yaw(yaw - self.yaw_step)
+
 				self.__logger.logwarn("Obstacle detected, turning...")
 				time.sleep(1)
-				dist = self.airsim.get_distance_reading('Distance_front')
+				dist_front = self.airsim.get_distance_reading('Distance_front')
+				dist_right = self.airsim.get_distance_reading('Distance_right')
+				dist_left = self.airsim.get_distance_reading('Distance_left')
 			
 			self.__logger.loginfo(f"Position: {curr_pos[0]}, {curr_pos[1]}, {curr_pos[2]}")
 
