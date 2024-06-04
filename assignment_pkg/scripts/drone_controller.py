@@ -43,12 +43,14 @@ class DroneController:
 
 		# Vars for obstacle avoidance
 		self.obst_threshold = 10.0
-		self.yaw_step = 30
+		self.yaw_step = 45
 		
 		# Vars for handling movements in X-Y plane
 		self.start_loc = [80040.0, 135390.0, 0.0]
 		self.goal_threshold = 5.0
 		self.step_size = 5.0
+		
+		self.can_move = False
 
 		# Start control loop
 		self.control_loop()
@@ -71,51 +73,61 @@ class DroneController:
 			self.airsim.move_z(self.curr_limit-self.alt_threshold)
 			self.prev_limit = self.curr_limit
 			self.__logger.logwarn("Changing altitude...")
-			time.sleep(4)
+			time.sleep(2)
+			self.can_move = False
+		else:
+			self.can_move = True
 
 
 	def control_loop(self):
 		curr_pos = self.airsim.get_drone_position()
-		goal_pos = np.subtract([90470.0, 39540.0, 10.0], self.start_loc) / 100
+		self.__logger.loginfo(f"Position: {curr_pos[0]}, {curr_pos[1]}")
+		self.__logger.loginfo(f"Real position: {self.start_loc[0]}, {self.start_loc[1]}")
+		goal_pos = np.subtract([77190.0, 128099.999999, 0.0], self.start_loc) / 100
 
 		yaw = math.atan2(goal_pos[1] - curr_pos[1], goal_pos[0] - curr_pos[0]) * 180 / math.pi
 		self.airsim.set_yaw(yaw)
+		time.sleep(10)
 
 		# Loop while drone is far from goal
 		while np.linalg.norm(np.array(curr_pos) - np.array(goal_pos)) > self.goal_threshold:
-			# Read distance sensors data
-			dist_front = self.airsim.get_distance_reading('Distance_front')
-			dist_right = self.airsim.get_distance_reading('Distance_right')
-			dist_left = self.airsim.get_distance_reading('Distance_left')
-
-			# While drone is near an obstacle, turn
-			while dist_front < self.obst_threshold:
-				# self.airsim.set_yaw(yaw + self.yaw_step)
-				if dist_right > dist_left:
-					self.airsim.set_yaw(yaw + self.yaw_step)
-				else:
-					self.airsim.set_yaw(yaw - self.yaw_step)
-
-				self.__logger.logwarn("Obstacle detected, turning...")
-				time.sleep(1)
+			if self.can_move:
+				# Read distance sensors data
 				dist_front = self.airsim.get_distance_reading('Distance_front')
 				dist_right = self.airsim.get_distance_reading('Distance_right')
 				dist_left = self.airsim.get_distance_reading('Distance_left')
-			
-			self.__logger.loginfo(f"Position: {curr_pos[0]}, {curr_pos[1]}, {curr_pos[2]}")
+				
+				# self.__logger.loginfo(f"Distances: {dist_front}, {dist_right}, {dist_left}")
 
-			# Take a step towards the goal while maintaining the yaw angle
-			curr_yaw = self.airsim.get_yaw()
-			step_vec = [self.step_size * math.cos(curr_yaw), self.step_size * math.sin(curr_yaw), 0.0]
-			new_pos = [curr_pos[i] + step_vec[i] for i in range(3)]
-			self.airsim.fly_to(new_pos)
-			time.sleep(2)
+				# While drone is near an obstacle, turn
+				while dist_front < self.obst_threshold:
+				
+					# self.airsim.set_yaw(yaw + self.yaw_step)
+					if dist_right < self.obst_threshold:
+						self.airsim.set_yaw(yaw - self.yaw_step)
+					elif dist_left < self.obst_threshold:
+						self.airsim.set_yaw(yaw + self.yaw_step)
 
-			# Face the goal again by calculating the new yaw angle
-			curr_pos = self.airsim.get_drone_position()
-			yaw = math.atan2(goal_pos[1] - curr_pos[1], goal_pos[0] - curr_pos[0]) * 180 / math.pi
-			self.airsim.set_yaw(yaw)
-			time.sleep(1)
+					self.__logger.logwarn("Obstacle detected, turning...")
+					time.sleep(2)
+					dist_front = self.airsim.get_distance_reading('Distance_front')
+					dist_right = self.airsim.get_distance_reading('Distance_right')
+					dist_left = self.airsim.get_distance_reading('Distance_left')
+				
+				self.__logger.loginfo(f"Position: {curr_pos[0]}, {curr_pos[1]}, {curr_pos[2]}")
+
+				# Take a step towards the goal while maintaining the yaw angle
+				curr_yaw = self.airsim.get_yaw()
+				step_vec = [self.step_size * math.cos(curr_yaw), self.step_size * math.sin(curr_yaw), 0.0]
+				new_pos = [curr_pos[i] + step_vec[i] for i in range(3)]
+				self.airsim.fly_to(new_pos)
+				time.sleep(3)
+
+				# Face the goal again by calculating the new yaw angle
+				curr_pos = self.airsim.get_drone_position()
+				yaw = math.atan2(goal_pos[1] - curr_pos[1], goal_pos[0] - curr_pos[0]) * 180 / math.pi
+				self.airsim.set_yaw(yaw)
+				time.sleep(2)
 		
 		self.__logger.loginfo("Goal reached!!!")
 

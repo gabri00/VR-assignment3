@@ -73,7 +73,7 @@ class ElevationClient:
 			elevation_cli = rospy.ServiceProxy('elevation_srv', Elevation_srv)
 			resp = elevation_cli(float(gps_data.gnss.geo_point.latitude), float(gps_data.gnss.geo_point.longitude))
 		except rospy.ServiceException as e:
-			self.__logger.logerr('Service call failed: %s' % e)
+			self.__logger.logerr(f'Service call failed: {e}')
 
 		curr_limit = resp.elevation + area_limit
 		self.__logger.loginfo(f'Max elevation: {curr_limit}')

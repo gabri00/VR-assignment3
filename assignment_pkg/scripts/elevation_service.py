@@ -36,7 +36,7 @@ class ElevationService:
 				self.__logger.logerr('No results found for the provided coordinates.')
 				res_srv.elevation = -1
 		else:
-			self.__logger.logerr('Error occurred while fetching data: %d', response.status_code)
+			self.__logger.logerr(f'Error occurred while fetching data: {response.status_code}')
 			res_srv.elevation = -1
 
 		return res_srv
