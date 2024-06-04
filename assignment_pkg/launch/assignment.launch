@@ -17,4 +17,9 @@
 	</node>
    
 	<node name="elevation_service" pkg="assignment_pkg" type="elevation_service.py" output="screen"/>
+
+	<node name="sensor_data" pkg="assignment_pkg" type="sensor_data.py" output="screen">
+		<param name="host" type="string" value="$(arg host)" />
+		<param name="port" type="int" value="$(arg port)" />
+	</node>
 </launch>

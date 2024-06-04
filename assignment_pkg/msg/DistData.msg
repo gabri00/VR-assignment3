@@ -1,3 +1,3 @@
-float64 data_front
-float64 data_left
-float64 data_right
+float64 front
+float64 left
+float64 right

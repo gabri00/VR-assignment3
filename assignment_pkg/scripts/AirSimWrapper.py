@@ -2,6 +2,7 @@
 
 # from __future__ import print_function
 import airsim
+import time
 
 class AirSimWrapper:
     def __init__(self, host, port):
@@ -32,13 +33,13 @@ class AirSimWrapper:
     
     def get_drone_position(self):
         pose = self.client.simGetVehiclePose()
-        return [pose.position.x_val, pose.position.y_val, pose.position.z_val]
+        return [pose.position.x_val, pose.position.y_val]
 
     def fly_to(self, point):
-        if point[2] > 0:
-            self.client.moveToPositionAsync(point[0], point[1], -point[2], 5).join()
-        else:
-            self.client.moveToPositionAsync(point[0], point[1], point[2], 5).join()
+        curr_z = self.client.simGetVehiclePose().pose.position.z_val
+        self.client.moveToPositionAsync(point[0], point[1], curr_z, 5).join()
+        
+        time.sleep(2)
 
     def fly_path(self, points):
         airsim_points = []
@@ -50,7 +51,8 @@ class AirSimWrapper:
         self.client.moveOnPathAsync(airsim_points, 5, 120, airsim.DrivetrainType.ForwardOnly, airsim.YawMode(False, 0), 20, 1).join()
 
     def set_yaw(self, yaw):
-        self.client.rotateToYawAsync(yaw, 5).join()
+        self.client.rotateToYawAsync(yaw).join()
+        time.sleep(1)
 
     def get_yaw(self):
         orientation_quat = self.client.simGetVehiclePose().orientation
@@ -72,5 +74,6 @@ class AirSimWrapper:
         return self.client.getGpsData(gps_name = '', vehicle_name = '')
 
     def move_z(self, pos):
-        self.client.moveToZAsync(pos, 1.5)
+        self.client.moveToZAsync(pos, 2)
+        time.sleep(2)
 
