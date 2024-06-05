@@ -36,7 +36,7 @@ class AirSimWrapper:
         return [pose.position.x_val, pose.position.y_val]
 
     def fly_to(self, point):
-        curr_z = self.client.simGetVehiclePose().pose.position.z_val
+        curr_z = self.client.simGetVehiclePose().position.z_val
         self.client.moveToPositionAsync(point[0], point[1], curr_z, 5).join()
         
         time.sleep(2)
@@ -66,6 +66,11 @@ class AirSimWrapper:
     #         object_names_ue = self.client.simListSceneObjects(query_string)
     #     pose = self.client.simGetObjectPose(object_names_ue[0])
     #     return [pose.position.x_val, pose.position.y_val, pose.position.z_val]
+    def get_obj_position(self, obj_name):
+        pose = self.client.simGetObjectPose(obj_name)
+        print(f'{self.client.simListSceneObjects()}')
+        return [pose.position.x_val, pose.position.y_val]
+ 
 
     def get_distance_reading(self, sensor_name):
         return self.client.getDistanceSensorData(sensor_name).distance

@@ -37,7 +37,7 @@ class DistanceControl:
 			rospy.signal_shutdown("Host and port parameters are required.")
 
 
-	def set_dist_data(self, event):		
+	def set_sensor_data(self, event):		
 		# Publish msg
 		msg = DistData()
 		msg.front = self.airsim.get_distance_reading('Distance_front')

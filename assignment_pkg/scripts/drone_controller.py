@@ -82,7 +82,7 @@ class DroneController:
 
 	def control_loop(self):
 		curr_pos = self.airsim.get_drone_position()
-		goal_pos = np.subtract([77190.0, 128099.999999], self.start_loc) / 100
+		goal_pos = np.subtract([82470.0, 112559.999999], self.start_loc) / 100
 
 		# Loop while drone is far from goal
 		while np.linalg.norm(np.array(curr_pos) - np.array(goal_pos)) > self.goal_threshold:
@@ -92,7 +92,7 @@ class DroneController:
 				
 				# If drone is near an obstacle, turn
 				if self.sensor_data.front < self.obst_threshold:
-					turn_sign = -1 if self.sensor_data.right <= self.sensor_data.left else 1
+					turn_sign = 1 if self.sensor_data.right <= self.sensor_data.left else -1
 					yaw += turn_sign * self.yaw_step
 
 					self.__logger.logwarn("Obstacle detected, turning...")
@@ -101,18 +101,18 @@ class DroneController:
 
 				# Take a step towards the goal while maintaining the yaw angle
 				# curr_yaw = self.airsim.get_yaw()
-				step_vec = self.step_size * [math.cos(yaw), math.sin(yaw)]
-				self.__logger.loginfo(f"Step vector: {step_vec}")
-				self.airsim.fly_to(np.add(curr_pos, step_vec))
+				step_vec = [self.step_size * math.cos(math.radians(yaw)), self.step_size * math.sin(math.radians(yaw))]
+				new_pos = [curr_pos[i] + step_vec[i] for i in range(2)]
+				self.airsim.fly_to(new_pos)
 
 				# Face the goal again by calculating the new yaw angle
 				curr_pos = self.airsim.get_drone_position()
 			else:
 				self.airsim.move_z(self.curr_limit-self.alt_threshold)
 				self.prev_limit = self.curr_limit
-				self.__logger.logwarn("Changing altitude...")
 		
 		self.__logger.loginfo("Goal reached!!!")
+		self.airsim.land()
 
 
 def main():

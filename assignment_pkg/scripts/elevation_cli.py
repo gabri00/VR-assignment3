@@ -75,7 +75,11 @@ class ElevationClient:
 		except rospy.ServiceException as e:
 			self.__logger.logerr(f'Service call failed: {e}')
 
+		if resp.elevation == -1:
+			self.__logger.logerr('Service error')
+
 		curr_limit = resp.elevation + area_limit
+		curr_limit = 25
 		self.__logger.loginfo(f'Max elevation: {curr_limit}')
 
 		# Publish current altitude limit
