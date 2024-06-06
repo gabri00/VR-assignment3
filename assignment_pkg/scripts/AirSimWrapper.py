@@ -75,6 +75,15 @@ class AirSimWrapper:
     def get_distance_reading(self, sensor_name):
         return self.client.getDistanceSensorData(sensor_name).distance
 
+    def get_lidar_reading(self, sensor_name):
+        points = self.client.getLidarData(sensor_name).point_cloud
+        rng = round(len(points)/3)
+        sensor_data = None
+        sensor_data.front = min(points[rng:2*rng])
+        sensor_data.left = min(points[0:rng])
+        sensor_data.right = min(points[2*rng:(len(points)-1)])
+        return sensor_data
+
     def get_gps_data(self):
         return self.client.getGpsData(gps_name = '', vehicle_name = '')
 

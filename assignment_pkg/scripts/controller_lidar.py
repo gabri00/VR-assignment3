@@ -36,7 +36,7 @@ class DroneController:
 
 		# Define subscribers
 		rospy.Subscriber('/elevation_limit', Float64, self.update_elevation)
-		#rospy.Subscriber('/sensor_data', DistData, self.get_sensor_data)
+		rospy.Subscriber('/sensor_data', DistData, self.get_sensor_data)
 
 		# Vars for altitude handling
 		self.curr_limit = 0.0
@@ -89,10 +89,10 @@ class DroneController:
 			if self.can_move_xy:
 				# Calculate yaw angle to face the goal
 				yaw = math.atan2(goal_pos[1] - curr_pos[1], goal_pos[0] - curr_pos[0]) * 180 / math.pi
-				self.sensor_data = self.airsim.get_lidar_reading("Lidar1")
+				
 				# If drone is near an obstacle, turn
 				if self.sensor_data.front < self.obst_threshold:
-					turn_sign = 1 if self.sensor_data.right <= self.sensor_data.left else -1
+					turn_sign = 1 if self.sensor_data.right <= self.sensor_data.left else -1 
 					yaw += turn_sign * self.yaw_step
 
 					self.__logger.logwarn("Obstacle detected, turning...")

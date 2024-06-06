@@ -59,12 +59,12 @@ class ElevationClient:
 	def check_gps(self, event):
 		# Get current GPS data
 		gps_data = self.airsim.get_gps_data()
-		self.__logger.loginfo(f'Current altitude: {abs(gps_data.gnss.geo_point.altitude)}')
+		#self.__logger.loginfo(f'Current altitude: {abs(gps_data.gnss.geo_point.altitude)}')
 
 		# Check if the drone is within a flight restriction area, and if so, get the current altitude limit
 		is_in_area = self.restriction_areas.contains(Point(gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.latitude))
 		if is_in_area.any():
-			self.__logger.logwarn('Drone IN restriction area')
+			#self.__logger.logwarn('Drone IN restriction area')
 			area_limit = int(self.restriction_areas[is_in_area]['Description'].iloc[0])
 		else:
 			area_limit = 120
@@ -80,7 +80,7 @@ class ElevationClient:
 
 		curr_limit = resp.elevation + area_limit
 		curr_limit = 25
-		self.__logger.loginfo(f'Max elevation: {curr_limit}')
+		#self.__logger.loginfo(f'Max elevation: {curr_limit}')
 
 		# Publish current altitude limit
 		self.elevation_pub.publish(curr_limit)

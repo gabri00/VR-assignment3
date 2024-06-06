@@ -13,7 +13,7 @@
 					"Enabled" : true,
 					"MinDistance": 0.2,
 					"MaxDistance": 40,
-					"X": 0, "Y": 0, "Z": -0.4,
+					"X": 0, "Y": 0, "Z": -0.1,
 					"Yaw": 0, "Pitch": 0, "Roll": 0,
 					"DrawDebugPoints": false
 				},
@@ -22,8 +22,8 @@
 					"Enabled" : true,
 					"MinDistance": 0.2,
 					"MaxDistance": 40,
-					"X": 0, "Y": -0.4, "Z": 0,
-					"Yaw": 90, "Pitch": 0, "Roll": 0,
+					"X": 0, "Y": 0.1, "Z": -0.1,
+					"Yaw": -70, "Pitch": 0, "Roll": 0,
 					"DrawDebugPoints": false
 				},
 				"Distance_right": {
@@ -31,9 +31,24 @@
 					"Enabled" : true,
 					"MinDistance": 0.2,
 					"MaxDistance": 40,
-					"X": 0, "Y": 0.4, "Z": 0,
-					"Yaw": -90, "Pitch": 0, "Roll": 0,
+					"X": 0, "Y": -0.1, "Z": -0.1,
+					"Yaw": 70, "Pitch": 0, "Roll": 0,
 					"DrawDebugPoints": false
+				},
+				"Lidar1": {
+					"SensorType": 6,
+                    			"Enabled" : true,
+                    			"NumberOfChannels": 1,
+                    			"RotationsPerSecond": 10,
+                    			"PointsPerSecond": 10000,
+                    			"X": 0, "Y": 0, "Z": -0.1,
+                    			"Roll": 0, "Pitch": 0, "Yaw" : 0,
+                    			"VerticalFOVUpper": 0,
+                    			"VerticalFOVLower": 0,
+                   			"HorizontalFOVStart": -60,
+                    			"HorizontalFOVEnd": 60,
+                    			"DrawDebugPoints": true,
+                    			"DataFrame": "SensorLocalFrame"
 				}
 			}
 		}
