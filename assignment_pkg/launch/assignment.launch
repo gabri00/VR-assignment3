@@ -4,6 +4,8 @@
 	<arg name="host" default="10.0.0.17" />
 	<arg name="port" default="41451" />
 
+	<launch file="$(find airsim_ros_pkgs)/launch/airsim_node.launch" />
+
 	<node name="controller" pkg="assignment_pkg" type="drone_controller.py" output="screen">
    		<param name="host" type="string" value="$(arg host)" />
 		<param name="port" type="int" value="$(arg port)" />

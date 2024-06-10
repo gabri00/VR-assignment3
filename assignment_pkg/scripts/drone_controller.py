@@ -6,7 +6,7 @@ import time
 import numpy as np
 import rospy
 from std_msgs.msg import Float64
-from assignment_pkg.msg import DistData
+from sensor_msgs.msg import PointCloud2
 
 from AirSimWrapper import AirSimWrapper
 from Logger import Logger
@@ -36,7 +36,7 @@ class DroneController:
 
 		# Define subscribers
 		rospy.Subscriber('/elevation_limit', Float64, self.update_elevation)
-		#rospy.Subscriber('/sensor_data', DistData, self.get_sensor_data)
+		rospy.Subscriber('/airsim_node/Drone/lidar/Lidar1', PointCloud2, self.get_sensor_data)
 
 		# Vars for altitude handling
 		self.curr_limit = 0.0
@@ -96,7 +96,7 @@ class DroneController:
 					yaw += turn_sign * self.yaw_step
 
 					self.__logger.logwarn("Obstacle detected, turning...")
-				
+
 				self.airsim.set_yaw(yaw)
 
 				# Take a step towards the goal while maintaining the yaw angle
