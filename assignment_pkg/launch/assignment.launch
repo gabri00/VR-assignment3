@@ -3,14 +3,21 @@
 <launch>
 	<arg name="host" default="10.0.0.17" />
 	<arg name="port" default="41451" />
+	<arg name="goal" default="[81260.0, 112789.999999]" />
 
 	<launch file="$(find airsim_ros_pkgs)/launch/airsim_node.launch" />
 
-	<node name="controller" pkg="assignment_pkg" type="drone_controller.py" output="screen">
+	<node name="global_planner" pkg="assignment_pkg" type="global_planner.py" output="screen">
    		<param name="host" type="string" value="$(arg host)" />
 		<param name="port" type="int" value="$(arg port)" />
 		<param name="weather" type="string" value="" />
 		<param name="weather_value" type="double" value="0.25" />
+		<param name="goal" value="$(arg goal)" />
+   	</node>
+
+	<node name="local_planner" pkg="assignment_pkg" type="local_planner.py" output="screen">
+   		<param name="host" type="string" value="$(arg host)" />
+		<param name="port" type="int" value="$(arg port)" />
    	</node>
 
 	<node name="elevation_cli" pkg="assignment_pkg" type="elevation_cli.py" output="screen">
@@ -19,9 +26,4 @@
 	</node>
    
 	<node name="elevation_service" pkg="assignment_pkg" type="elevation_service.py" output="screen"/>
-
-	<node name="sensor_data" pkg="assignment_pkg" type="sensor_data.py" output="screen">
-		<param name="host" type="string" value="$(arg host)" />
-		<param name="port" type="int" value="$(arg port)" />
-	</node>
 </launch>

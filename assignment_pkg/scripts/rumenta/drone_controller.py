@@ -6,7 +6,7 @@ import time
 import numpy as np
 import rospy
 from std_msgs.msg import Float64
-from assignment_pkg.msg import DistData
+from sensor_msgs.msg import PointCloud2
 
 from AirSimWrapper import AirSimWrapper
 from Logger import Logger
@@ -36,7 +36,7 @@ class DroneController:
 
 		# Define subscribers
 		rospy.Subscriber('/elevation_limit', Float64, self.update_elevation)
-		rospy.Subscriber('/sensor_data', DistData, self.get_sensor_data)
+		rospy.Subscriber('/airsim_node/Drone/lidar/Lidar1', PointCloud2, self.get_sensor_data)
 
 		# Vars for altitude handling
 		self.curr_limit = 0.0
@@ -80,6 +80,18 @@ class DroneController:
 		self.sensor_data = data
 
 
+	def compute_vel_cmd(self, start, end, speed):
+		dir_vec = np.array(end) - np.array(start)
+		dist = np.linalg.norm(dir_vec)
+
+		if dist > 0:
+			unit_vec = (dir_vec) / dist
+		else:
+			unit_vec = np.zeros_like(dir_vec)
+
+		return unit_vec * speed
+
+
 	def control_loop(self):
 		curr_pos = self.airsim.get_drone_position()
 		goal_pos = np.subtract([81260.0, 112789.999999], self.start_loc) / 100
@@ -89,14 +101,14 @@ class DroneController:
 			if self.can_move_xy:
 				# Calculate yaw angle to face the goal
 				yaw = math.atan2(goal_pos[1] - curr_pos[1], goal_pos[0] - curr_pos[0]) * 180 / math.pi
-				
+				self.sensor_data = self.airsim.get_lidar_reading("Lidar1")
 				# If drone is near an obstacle, turn
 				if self.sensor_data.front < self.obst_threshold:
-					turn_sign = 1 if self.sensor_data.right <= self.sensor_data.left else -1 
+					turn_sign = 1 if self.sensor_data.right <= self.sensor_data.left else -1
 					yaw += turn_sign * self.yaw_step
 
 					self.__logger.logwarn("Obstacle detected, turning...")
-				
+
 				self.airsim.set_yaw(yaw)
 
 				# Take a step towards the goal while maintaining the yaw angle
