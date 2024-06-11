@@ -51,7 +51,7 @@ class AirSimWrapper:
         self.client.moveOnPathAsync(airsim_points, 5, 120, airsim.DrivetrainType.ForwardOnly, airsim.YawMode(False, 0), 20, 1).join()
 
     def move_vel(self, vel):
-        self.client.moveByVelocityAsync(vel[0], vel[1], 5)
+        self.client.moveByVelocityAsync(vel[0], vel[1], 0, 5)
         time.sleep(2)
 
     def set_yaw(self, yaw):

@@ -32,12 +32,14 @@ class ElevationService:
 			data = response.json()
 			if 'results' in data and len(data['results']) > 0:
 				res_srv.elevation = float(data['results'][0]['elevation'])
+				if res_srv.elevation == -1:
+					res_srv.elevation = 0
 			else:
 				self.__logger.logerr('No results found for the provided coordinates.')
-				res_srv.elevation = -1
+				res_srv.elevation = 0
 		else:
 			self.__logger.logerr(f'Error occurred while fetching data: {response.status_code}')
-			res_srv.elevation = -1
+			res_srv.elevation = 0
 
 		return res_srv
 

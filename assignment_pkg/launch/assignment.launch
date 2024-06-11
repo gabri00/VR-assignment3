@@ -3,16 +3,20 @@
 <launch>
 	<arg name="host" default="10.0.0.17" />
 	<arg name="port" default="41451" />
-	<arg name="goal" default="[81260.0, 112789.999999]" />
+	<arg name="goal_x" default="81260.0" />
+	<arg name="goal_y" default="112789.999999" />
 
-	<launch file="$(find airsim_ros_pkgs)/launch/airsim_node.launch" />
+	<include file="$(find airsim_ros_pkgs)/launch/airsim_node.launch">
+		<arg name="host" value="$(arg host)" />
+	</include>
 
 	<node name="global_planner" pkg="assignment_pkg" type="global_planner.py" output="screen">
    		<param name="host" type="string" value="$(arg host)" />
 		<param name="port" type="int" value="$(arg port)" />
 		<param name="weather" type="string" value="" />
 		<param name="weather_value" type="double" value="0.25" />
-		<param name="goal" value="$(arg goal)" />
+		<param name="goal_x" type="double" value="$(arg goal_x)" />
+		<param name="goal_y" type="double" value="$(arg goal_y)" />
    	</node>
 
 	<node name="local_planner" pkg="assignment_pkg" type="local_planner.py" output="screen">

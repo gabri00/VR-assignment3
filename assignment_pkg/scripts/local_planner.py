@@ -49,6 +49,7 @@ class DroneController:
 
 
 	def get_sensor_data(self, data):
+		self.__logger.loginfo(f"{data.data[0]}")
 		self.sensor_data = data.data
 
 

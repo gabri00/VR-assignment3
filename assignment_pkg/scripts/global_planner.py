@@ -39,7 +39,7 @@ class DroneController:
 		self.alt_threshold = 5.0
 		
 		# Vars for handling movements in X-Y plane
-		self.start_loc = [81590.0, 129520.0]
+		self.start_loc = np.array([81590.0, 129520.0])
 		self.goal_threshold = 5.0
 		self.vel = 10.0
 
@@ -54,7 +54,9 @@ class DroneController:
 		self.port = rospy.get_param('~port')
 		self.weather = rospy.get_param('~weather')
 		self.weather_value = rospy.get_param('~weather_value')
-		self.goal = np.array(rospy.get_param('~goal', [])).reshape(-1, 2)
+		goal_x = rospy.get_param('~goal_x')
+		goal_y = rospy.get_param('~goal_y')
+		self.goal = np.array([goal_x, goal_y])
 
 		if not self.host or not self.port:
 			self.__logger.logerr("Host and port parameters are required.")
@@ -90,12 +92,13 @@ class DroneController:
 		while np.linalg.norm(np.array(curr_pos) - np.array(goal_pos)) > self.goal_threshold:
 			if self.can_move_xy:
 				vel_cmd = self.compute_vel_cmd(curr_pos, goal_pos, self.vel)
-				self.airsim.move_vel(vel_cmd)
+				#self.airsim.move_vel(vel_cmd)
 			else:
 				self.airsim.move_z(self.curr_limit-self.alt_threshold)
 				self.prev_limit = self.curr_limit
 		
 		self.__logger.loginfo("Goal reached!!!")
+		self.airsim.move_vel(0)
 		self.airsim.land()
 
 
