@@ -35,8 +35,8 @@ class DroneController:
 
 		self.sensor_data = None
 
-		# Start control loop
-		self.control_loop()
+		# Start control loop every 1 second
+		rospy.Timer(rospy.Duration(1), self.control_loop)
 
 
 	def __load_params(self):
@@ -49,12 +49,16 @@ class DroneController:
 
 
 	def get_sensor_data(self, data):
-		self.__logger.loginfo(f"{data.data[0]}")
 		self.sensor_data = data.data
+		self.sensor_data = np.reshape(self.sensor_data, (int(self.sensor_data.shape[0]/3), 3))
 
 
 	def control_loop(self):
-		pass
+		curr_pos = self.airsim.get_drone_position()
+		distances = np.linalg.norm(curr_pos - self.sensor_data, axis=1)
+
+		# Print distances for debugging
+		self.__logger.loginfo(f"Distances: {distances}")
 
 
 def main():
