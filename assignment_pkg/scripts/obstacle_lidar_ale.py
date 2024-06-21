@@ -6,21 +6,14 @@ import time
 import numpy as np
 
 def setup_drone():
-    """Setup the AirSim drone client and perform initial actions."""
-    client = airsim.MultirotorClient()
-    print('Client AirSim creato con successo')
+    client = airsim.MultirotorClient(ip='10.0.0.17', port=41451)
     client.confirmConnection()
-    print('Connessione confermata con successo')
     client.enableApiControl(True)
-    print('API abilitata con successo')
     client.armDisarm(True)
-    print('Drone armato con successo')
     client.takeoffAsync().join()
-    print('Decollo completato con successo')
     return client
 
 def get_lidar_data(client):
-    """Retrieve and process LiDAR data from the drone."""
     lidarData = client.getLidarData()
     if len(lidarData.point_cloud) < 3:
         print("No points received from Lidar data")
@@ -31,28 +24,22 @@ def get_lidar_data(client):
     return points
 
 def calculate_weights(points):
-    """Calculate weights for obstacle detection based on LiDAR points."""
     left_weights = []
     right_weights = []
     front_weights = []
     for point in points:
         x, y, z = point
-        if x > 0 and abs(z) < 2:
-            weight = 1 / (x**2 + y**2 + z**2)
-            if y < -1:
-                left_weights.append(weight)
-            elif y > 1:
-                right_weights.append(weight)
-            else:
-                front_weights.append(weight)
+        weight = 1 / (x**2 + y**2 + z**2)
+        if y < -1:
+            left_weights.append(weight)
+        elif y > 1:
+            right_weights.append(weight)
+        else:
+            front_weights.append(weight)
 
-    left_weight_sum = sum(left_weights)
-    right_weight_sum = sum(right_weights)
-    front_weight_sum = sum(front_weights)
-    return left_weight_sum, right_weight_sum, front_weight_sum
+    return sum(left_weights), sum(right_weights), sum(front_weights)
 
 def decide_movement(left_weight_sum, right_weight_sum, front_weight_sum):
-    """Decide the movement based on the weights of obstacles."""
     turn_weight = right_weight_sum - left_weight_sum
     if front_weight_sum > 0:
         print("Ostacolo rilevato davanti")
@@ -75,11 +62,6 @@ def avoid_obstacle(client, turn_weight, front_weight_sum):
     """Avoid obstacle by moving the drone laterally."""
     while True:
         if front_weight_sum > 0:
-            if turn_weight > 0:
-                move_drone(client, 0, -1, 0)
-            else:
-                move_drone(client, 0, 1, 0)
-        else:
             if turn_weight > 0:
                 move_drone(client, 0, -1, 0)
             else:

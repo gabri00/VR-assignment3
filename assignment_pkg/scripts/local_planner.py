@@ -4,6 +4,7 @@ import numpy as np
 import rospy
 from std_msgs.msg import Float64
 from sensor_msgs.msg import PointCloud2
+import sensor_msgs.point_cloud2 as pc2
 
 from AirSimWrapper import AirSimWrapper
 from Logger import Logger
@@ -36,7 +37,7 @@ class DroneController:
 		self.sensor_data = None
 
 		# Start control loop every 1 second
-		rospy.Timer(rospy.Duration(1), self.control_loop)
+		# rospy.Timer(rospy.Duration(1), self.control_loop)
 
 
 	def __load_params(self):
@@ -48,17 +49,52 @@ class DroneController:
 			rospy.signal_shutdown("Host and port parameters are required.")
 
 
-	def get_sensor_data(self, data):
-		self.sensor_data = data.data
-		self.sensor_data = np.reshape(self.sensor_data, (int(self.sensor_data.shape[0]/3), 3))
+	def get_sensor_data(self, msg):
+		points_list = []
+		for point in pc2.read_points(msg, skip_nans=True):
+			points_list.append([point[0], point[1], point[2]])
 
+		# Convert to numpy array
+		self.sensor_data = np.array(points_list, dtype=np.float32)
 
-	def control_loop(self):
+		# Get 3D drone position
 		curr_pos = self.airsim.get_drone_position()
-		distances = np.linalg.norm(curr_pos - self.sensor_data, axis=1)
+		curr_pos.append(0)
+		curr_pos = np.array(curr_pos)
+		
+		distances = np.linalg.norm(self.sensor_data - curr_pos, axis=1)
 
 		# Print distances for debugging
-		self.__logger.loginfo(f"Distances: {distances}")
+		speed, turn = self.compute_weights(distances)
+		
+		
+	
+	
+	def compute_weights(self, distances):
+		with np.errstate(divide='ignore', invalid='ignore'):
+			weights = 1.0 / np.sqrt(distances)
+			weights[~np.isfinite(weights)] = 0  # Replace infinities and NaNs with 0
+
+		left_weights  = []
+		right_weights = []
+		front_weights = []
+		for i in range(0,len(self.sensor_data)):
+			if self.sensor_data[i][1] < -1:
+				left_weights.append(weights[i])
+			elif self.sensor_data[i][1] > 1:
+				right_weights.append(weights[i])
+			else:
+				front_weights.append(weights[i])
+		self.__logger.loginfo(f"data: {self.sensor_data}")
+		self.__logger.loginfo(f"f: {front_weights}")
+		self.__logger.loginfo(f"l: {left_weights}")
+		self.__logger.loginfo(f"r: {right_weights}")
+
+		turn = sum(right_weights) - sum(left_weights)
+		
+		speed = max(0, 3 - abs(turn_weight) + sum(front_weights))
+		return speed, turn
+
 
 
 def main():
