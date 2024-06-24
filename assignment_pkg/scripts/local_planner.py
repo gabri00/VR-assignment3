@@ -32,7 +32,7 @@ class DroneController:
 		self.vel_pub = rospy.Publisher('/vel_cmd', Float64, queue_size=1)
 
 		# Vars for obstacle avoidance
-		self.obst_threshold = 15.0
+		self.obst_threshold = 10.0
 
 		self.sensor_data = None
 
@@ -65,9 +65,15 @@ class DroneController:
 		distances = np.linalg.norm(self.sensor_data - curr_pos, axis=1)
 
 		# Print distances for debugging
-		speed, turn = self.compute_weights(distances)
-		
-		
+		speed, turn, front_w = self.compute_weights(distances)
+
+
+		msg = Float64()
+		if speed < 1 and front_w > 0:
+			msg.data = -1 if turn > 0 else 1
+		else:
+			msg.data = speed
+		self.vel_pub.publish(msg)
 	
 	
 	def compute_weights(self, distances):
@@ -85,15 +91,15 @@ class DroneController:
 				right_weights.append(weights[i])
 			else:
 				front_weights.append(weights[i])
-		self.__logger.loginfo(f"data: {self.sensor_data}")
-		self.__logger.loginfo(f"f: {front_weights}")
-		self.__logger.loginfo(f"l: {left_weights}")
-		self.__logger.loginfo(f"r: {right_weights}")
+		# self.__logger.loginfo(f"data: {self.sensor_data}")
+		# self.__logger.loginfo(f"f: {front_weights}")
+		# self.__logger.loginfo(f"l: {left_weights}")
+		# self.__logger.loginfo(f"r: {right_weights}")
 
 		turn = sum(right_weights) - sum(left_weights)
 		
-		speed = max(0, 3 - abs(turn_weight) + sum(front_weights))
-		return speed, turn
+		speed = max(0, 3 - abs(turn) + sum(front_weights))
+		return speed, turn, sum(front_weights)
 
 
 

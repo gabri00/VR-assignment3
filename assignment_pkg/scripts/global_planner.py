@@ -2,6 +2,7 @@
 
 import numpy as np
 import rospy
+import math
 from std_msgs.msg import Float64
 
 from AirSimWrapper import AirSimWrapper
@@ -32,6 +33,7 @@ class DroneController:
 
 		# Define subscribers
 		rospy.Subscriber('/elevation_limit', Float64, self.update_elevation)
+		rospy.Subscriber('/vel_cmd', Float64, self.set_vel)
 
 		# Vars for altitude handling
 		self.curr_limit = 0.0
@@ -39,14 +41,14 @@ class DroneController:
 		self.alt_threshold = 5.0
 		
 		# Vars for handling movements in X-Y plane
-		self.start_loc = np.array([81590.0, 129520.0])
+		self.start_loc = np.array([0.0, 0.000364])
 		self.goal_threshold = 5.0
-		self.vel = 10.0
+		self.vel = 0.0
 
 		self.can_move_xy = False
 
 		# Start control loop
-		self.control_loop()
+		rospy.Timer(rospy.Duration(0.5), self.control_loop)
 
 
 	def __load_params(self):
@@ -63,16 +65,18 @@ class DroneController:
 			rospy.signal_shutdown("Host and port parameters are required.")
 
 
-	def compute_vel_cmd(self, start, end, speed):
-		dir_vec = np.array(end) - np.array(start)
-		dist = np.linalg.norm(dir_vec)
+	def set_vel(self, msg):
+		self.vel = msg.data
 
-		if dist > 0:
-			unit_vec = (dir_vec) / dist
-		else:
-			unit_vec = np.zeros_like(dir_vec)
 
-		return unit_vec * speed
+	#def compute_vel_cmd(self, start, end, speed):
+	#	dir_vec = np.array(end) - np.array(start)
+	#	dist = np.linalg.norm(dir_vec)
+	#	if dist > 0:
+	#		unit_vec = (dir_vec) / dist
+	#	else:
+	#		unit_vec = np.zeros_like(dir_vec)
+	#	return unit_vec * speed
 
 
 	def update_elevation(self, data):
@@ -84,22 +88,26 @@ class DroneController:
 		return np.subtract(end, start) / 100
 
 
-	def control_loop(self):
+	def control_loop(self, event):
 		curr_pos = self.airsim.get_drone_position()
 		goal_pos = self.ue_to_airsim(self.goal, self.start_loc)
+		yaw = math.atan2(goal_pos[1] - curr_pos[1], goal_pos[0] - curr_pos[0]) * 180 / math.pi
+		self.airsim.set_yaw(yaw)
 
 		# Loop while drone is far from goal
-		while np.linalg.norm(np.array(curr_pos) - np.array(goal_pos)) > self.goal_threshold:
+		if np.linalg.norm(np.array(curr_pos) - np.array(goal_pos)) > self.goal_threshold:
 			if self.can_move_xy:
-				vel_cmd = self.compute_vel_cmd(curr_pos, goal_pos, self.vel)
-				#self.airsim.move_vel(vel_cmd)
+				# vel_cmd = self.compute_vel_cmd(curr_pos, goal_pos, self.vel)
+				vel_cmd = np.array([self.vel, 0]) if self.vel > 1 else np.array([0, self.vel])
+				self.airsim.move_vel(vel_cmd)
+				self.__logger.loginfo(f"Velocity: {vel_cmd}")
 			else:
 				self.airsim.move_z(self.curr_limit-self.alt_threshold)
 				self.prev_limit = self.curr_limit
-		
-		self.__logger.loginfo("Goal reached!!!")
-		self.airsim.move_vel(0)
-		self.airsim.land()
+		else:
+			self.__logger.loginfo("Goal reached!!!")
+			self.airsim.move_vel(0)
+			self.airsim.land()
 
 
 def main():
