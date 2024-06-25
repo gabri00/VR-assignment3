@@ -3,13 +3,13 @@
 import numpy as np
 import rospy
 import math
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 
 from AirSimWrapper import AirSimWrapper
 from Logger import Logger
 
 
-class DroneController:
+class GlobalPlanner:
 	def __init__(self, node_name):
 		self._node_name = node_name
 		rospy.init_node(self._node_name)
@@ -33,7 +33,7 @@ class DroneController:
 
 		# Define subscribers
 		rospy.Subscriber('/elevation_limit', Float64, self.update_elevation)
-		rospy.Subscriber('/vel_cmd', Float64, self.set_vel)
+		rospy.Subscriber('/turn', Bool, self.set_turn)
 
 		# Vars for altitude handling
 		self.curr_limit = 0.0
@@ -43,8 +43,7 @@ class DroneController:
 		# Vars for handling movements in X-Y plane
 		self.start_loc = np.array([0.0, 0.000364])
 		self.goal_threshold = 5.0
-		self.vel = 0.0
-
+		self.turn = False
 		self.can_move_xy = False
 
 		# Start control loop
@@ -65,18 +64,8 @@ class DroneController:
 			rospy.signal_shutdown("Host and port parameters are required.")
 
 
-	def set_vel(self, msg):
-		self.vel = msg.data
-
-
-	#def compute_vel_cmd(self, start, end, speed):
-	#	dir_vec = np.array(end) - np.array(start)
-	#	dist = np.linalg.norm(dir_vec)
-	#	if dist > 0:
-	#		unit_vec = (dir_vec) / dist
-	#	else:
-	#		unit_vec = np.zeros_like(dir_vec)
-	#	return unit_vec * speed
+	def set_turn(self, msg):
+		self.turn = msg.data
 
 
 	def update_elevation(self, data):
@@ -85,33 +74,30 @@ class DroneController:
 
 
 	def ue_to_airsim(self, end, start):
-		return np.subtract(end, start) / 100
+		return np.array(np.subtract(end, start) / 100)
 
 
 	def control_loop(self, event):
 		curr_pos = self.airsim.get_drone_position()
 		goal_pos = self.ue_to_airsim(self.goal, self.start_loc)
-		yaw = math.atan2(goal_pos[1] - curr_pos[1], goal_pos[0] - curr_pos[0]) * 180 / math.pi
-		self.airsim.set_yaw(yaw)
 
 		# Loop while drone is far from goal
-		if np.linalg.norm(np.array(curr_pos) - np.array(goal_pos)) > self.goal_threshold:
+		if np.linalg.norm(curr_pos - goal_pos) > self.goal_threshold:
 			if self.can_move_xy:
-				# vel_cmd = self.compute_vel_cmd(curr_pos, goal_pos, self.vel)
-				vel_cmd = np.array([self.vel, 0]) if self.vel > 1 else np.array([0, self.vel])
-				self.airsim.move_vel(vel_cmd)
-				self.__logger.loginfo(f"Velocity: {vel_cmd}")
+				if not self.turn:
+					yaw = math.atan2(goal_pos[1] - curr_pos[1], goal_pos[0] - curr_pos[0]) * 180 / math.pi
+					self.airsim.set_yaw(yaw)
 			else:
 				self.airsim.move_z(self.curr_limit-self.alt_threshold)
 				self.prev_limit = self.curr_limit
 		else:
 			self.__logger.loginfo("Goal reached!!!")
-			self.airsim.move_vel(0)
+			# self.airsim.move_vel(0)
 			self.airsim.land()
 
 
 def main():
-	DroneController('global_planner')
+	GlobalPlanner('global_planner')
 	rospy.spin()
 
 
