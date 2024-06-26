@@ -54,7 +54,7 @@ class LocalPlanner:
 
 		# Convert points to numpy array
 		self.sensor_data = np.array(points_list, dtype=np.float32)
-		self.__logger.loginfo(f"data: {self.sensor_data}")
+		#self.__logger.loginfo(f"data: {self.sensor_data}")
 
 		# Compute distances from drone
 		distances = np.linalg.norm(self.sensor_data, axis=1)
@@ -75,9 +75,9 @@ class LocalPlanner:
 		# Select only distances too close
 		f_dist = f_dist[f_dist < self.obst_th]
 
-		self.__logger.loginfo(f"FRONT: {f_dist}")
-		self.__logger.loginfo(f"LEFT: {l_dist}")
-		self.__logger.loginfo(f"RIGHT: {r_dist}")
+		#self.__logger.loginfo(f"FRONT: {f_dist}")
+		#self.__logger.loginfo(f"LEFT: {l_dist}")
+		#self.__logger.loginfo(f"RIGHT: {r_dist}")
 
 		turn_sgn = 1 if sum(r_dist) > sum(l_dist) else -1
 

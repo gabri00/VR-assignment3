@@ -59,12 +59,12 @@ class ElevationClient:
 	def check_gps(self, event):
 		# Get current GPS data
 		gps_data = self.airsim.get_gps_data()
-		self.__logger.loginfo(f'Current altitude: {abs(gps_data.gnss.geo_point.altitude)}')
+		#self.__logger.loginfo(f'Current altitude: {abs(gps_data.gnss.geo_point.altitude)}')
 
 		# Check if the drone is within a flight restriction area, and if so, get the current altitude limit
 		is_in_area = self.restriction_areas.contains(Point(gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.latitude))
 		if is_in_area.any():
-			self.__logger.logwarn('Drone IN restriction area')
+			#self.__logger.logwarn('Drone IN restriction area')
 			area_limit = int(self.restriction_areas[is_in_area]['Description'].iloc[0])
 		else:
 			area_limit = 120
@@ -75,8 +75,8 @@ class ElevationClient:
 		except rospy.ServiceException as e:
 			self.__logger.logerr(f'Service call failed: {e}')
 
-		if resp.elevation == 0:
-			self.__logger.logerr('Service error')
+		#if resp.elevation == 0:
+			#self.__logger.logerr('Service error')
 
 		curr_limit = resp.elevation + area_limit
 
