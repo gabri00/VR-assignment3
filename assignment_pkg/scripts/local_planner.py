@@ -34,7 +34,7 @@ class LocalPlanner:
 		# Vars for obstacle avoidance
 		self.sensor_data = None
 		self.vel = 5.0
-		self.obst_th = 5.0
+		self.obst_th = 20.0
 
 
 	def __load_params(self):
@@ -54,10 +54,12 @@ class LocalPlanner:
 
 		# Convert points to numpy array
 		self.sensor_data = np.array(points_list, dtype=np.float32)
-		#self.__logger.loginfo(f"data: {self.sensor_data}")
 
 		# Compute distances from drone
-		distances = np.linalg.norm(self.sensor_data, axis=1)
+		if self.sensor_data.size:
+			distances = np.linalg.norm(self.sensor_data, axis=1)
+		else:
+			return
 
 		# Separate distances in L, R, F sides
 		l_dist = np.array([])

@@ -3,8 +3,8 @@
 <launch>
 	<arg name="host" default="10.0.0.17" />
 	<arg name="port" default="41451" />
-	<arg name="goal_x" default="4016.124673" />
-	<arg name="goal_y" default="-24791.899951" />
+	<arg name="goal_x" default="12796.124673" />
+	<arg name="goal_y" default="-86971.899952" />
 
 	<include file="$(find airsim_ros_pkgs)/launch/airsim_node.launch">
 		<arg name="host" value="$(arg host)" />

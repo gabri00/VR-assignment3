@@ -31,14 +31,15 @@ class AirSimWrapper:
         time.sleep(1)
     
     def land(self):
-        self.client.landAsync().join()
+        self.client.landAsync()
+        time.sleep(5)
     
     def get_drone_position(self):
         pose = self.client.simGetVehiclePose()
         return np.array([pose.position.x_val, pose.position.y_val])
 
     def move_vel(self, vel):
-        self.client.moveByVelocityAsync(vel[0], vel[1], 0, 2)
+        self.client.moveByVelocityBodyFrameAsync(vel[0], vel[1], 0, 1)
 
     def set_yaw(self, yaw):
         self.client.rotateToYawAsync(yaw).join()

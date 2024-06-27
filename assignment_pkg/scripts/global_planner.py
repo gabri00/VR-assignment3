@@ -42,15 +42,18 @@ class GlobalPlanner:
 		self.alt_threshold = 5.0
 		
 		# Vars for handling movements in X-Y plane
-		self.start_loc = np.array([0.0, 0.000364])
+		self.start_loc = np.array([4740.0, -64910.0])
 		self.goal_threshold = 5.0
 		self.can_move_xy = False
 		self.vel_cmd = np.array([0, 0])
+		self.prev_vel_cmd = np.array([-1, -1])
+		self.goal_reached = False
 
 		self.goal_pos = self.ue_to_airsim(self.goal, self.start_loc)
 
 		# Start control loop
-		rospy.Timer(rospy.Duration(0.5), self.control_loop)
+		self.tmr = rospy.Timer(rospy.Duration(1), self.control_loop)
+		self.airsim.land()
 
 
 	def __load_params(self):
@@ -88,27 +91,23 @@ class GlobalPlanner:
 	def control_loop(self, event):
 		curr_pos = self.airsim.get_drone_position()
 
-		yaw = math.atan2(self.goal_pos[1] - curr_pos[1], self.goal_pos[0] - curr_pos[0]) * 180 / math.pi
-		self.__logger.loginfo(f"YAW: {yaw}")
-		self.__logger.loginfo(f"YAW: {self.airsim.get_yaw()}")
-
 		# Loop while drone is far from goal
 		if np.linalg.norm(curr_pos - self.goal_pos) > self.goal_threshold:
+			yaw = math.atan2(self.goal_pos[1] - curr_pos[1], self.goal_pos[0] - curr_pos[0]) * 180 / math.pi
 			if self.can_move_xy:
-				if abs(yaw) - abs(self.airsim.get_yaw()) > 10 and not self.vel_cmd[1]:					
+				self.airsim.move_vel(self.vel_cmd)
+				if abs(yaw) - abs(self.airsim.get_yaw()) > 5:					
 					self.airsim.set_yaw(yaw)
 					self.__logger.loginfo("ADJUSTING YAW...")
-				else:
-					self.airsim.move_vel(self.vel_cmd)
-					self.__logger.loginfo("MOVING...")
+				#else:
+				self.__logger.loginfo("MOVING...")
 			else:
 				self.__logger.loginfo("ELEVATING...")
 				self.airsim.move_z(self.curr_limit-self.alt_threshold)
 				self.prev_limit = self.curr_limit
 		else:
 			self.__logger.loginfo("Goal reached!!!")
-			self.airsim.move_vel(np.array([0, 0]))
-			self.airsim.land()
+			self.tmr.shutdown()
 
 
 def main():
