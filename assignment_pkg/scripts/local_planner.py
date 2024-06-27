@@ -2,7 +2,7 @@
 
 import numpy as np
 import rospy
-from assignment_pkg.msg import VelCmd
+from assignment_pkg.msg import ObstDetected
 from sensor_msgs.msg import PointCloud2
 import sensor_msgs.point_cloud2 as pc2
 
@@ -29,11 +29,10 @@ class LocalPlanner:
 		rospy.Subscriber('/airsim_node/Drone/lidar/Lidar1', PointCloud2, self.get_sensor_data)
 
 		# Define publishers
-		self.vel_cmd_pub = rospy.Publisher('/vel_cmd', VelCmd, queue_size=1)
+		self.obst_pub = rospy.Publisher('/obst_detected', ObstDetected, queue_size=1)
 
 		# Vars for obstacle avoidance
 		self.sensor_data = None
-		self.vel = 5.0
 		self.obst_th = 5.0
 
 
@@ -79,21 +78,21 @@ class LocalPlanner:
 		#self.__logger.loginfo(f"LEFT: {l_dist}")
 		#self.__logger.loginfo(f"RIGHT: {r_dist}")
 
-		turn_sgn = 1 if sum(r_dist) > sum(l_dist) else -1
-
-		#self.__logger.loginfo(f"SIGN: {turn_sgn}")
-
-		vel_msg = VelCmd()
+		obst_msg = ObstDetected()
 
 		if f_dist.size:
 			self.__logger.loginfo(f"OBSTACLE DETECTED")
-			vel_msg.vx = 0
-			vel_msg.vy = turn_sgn * self.vel
+			if sum(r_dist) > sum(l_dist):
+				obst_msg.left = True
+				obst_msg.right = False
+			else:
+				obst_msg.left = False
+				obst_msg.right = True
 		else:
-			vel_msg.vx = self.vel
-			vel_msg.vy = 0
+			obst_msg.left = False
+			obst_msg.right = False
 
-		self.vel_cmd_pub.publish(vel_msg)
+		self.obst_pub.publish(obst_msg)
 
 
 def main():
