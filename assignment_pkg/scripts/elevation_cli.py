@@ -35,7 +35,7 @@ class ElevationClient:
 		self.elevation_pub = rospy.Publisher('/elevation_limit', Float64, queue_size=1)
 
 		# Initialize timer to check GPS data
-		rospy.Timer(rospy.Duration(7), self.check_gps)
+		rospy.Timer(rospy.Duration(5), self.check_gps)
 
 
 	def __load_params(self):

@@ -3,8 +3,6 @@
 <launch>
 	<arg name="host" default="10.0.0.17" />
 	<arg name="port" default="41451" />
-	<arg name="goal_x" default="12796.124673" />
-	<arg name="goal_y" default="-86971.899952" />
 
 	<node name="airsim_node" pkg="airsim_ros_pkgs" type="airsim_node" output="log">
 		<param name="is_vulkan" type="bool" value="false" />
@@ -23,8 +21,6 @@
 		<param name="port" type="int" value="$(arg port)" />
 		<param name="weather" type="string" value="" />
 		<param name="weather_value" type="double" value="0.25" />
-		<param name="goal_x" type="double" value="$(arg goal_x)" />
-		<param name="goal_y" type="double" value="$(arg goal_y)" />
    	</node>
 
 	<node name="local_planner" pkg="assignment_pkg" type="local_planner.py" output="screen">

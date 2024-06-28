@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import airsim
-import time
 import numpy as np
 
 class AirSimWrapper:
@@ -33,7 +32,11 @@ class AirSimWrapper:
     
     def get_drone_position(self):
         pose = self.client.simGetVehiclePose()
-        return np.array([pose.position.x_val, pose.position.y_val, pose.position.z_val])
+        return np.array([pose.position.x_val, pose.position.y_val])
+    
+    def get_obj_position(self, obj_name):
+    	pose = self.client.simGetObjectPose(obj_name)
+    	return np.array([pose.position.x_val, pose.position.y_val, pose.position.z_val])
 
     def move_vel(self, vel):
         self.client.moveByVelocityBodyFrameAsync(vel[0], vel[1], 0, 1)
@@ -50,6 +53,5 @@ class AirSimWrapper:
         return self.client.getGpsData(gps_name = '', vehicle_name = '')
 
     def move_z(self, pos):
-        self.client.moveToZAsync(pos, 2)
-        time.sleep(2)
+        self.client.moveToZAsync(pos, 4).join()
 
