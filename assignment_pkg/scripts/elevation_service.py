@@ -17,7 +17,7 @@ class ElevationService:
 		self.__logger.loginfo("Node started.")
 
 		# Init service
-		s = rospy.Service('elevation_srv', Elevation_srv, self.get_elevation)
+		rospy.Service('elevation_srv', Elevation_srv, self.get_elevation)
 		self.__logger.loginfo('Service is ready to provide data.')
 
 

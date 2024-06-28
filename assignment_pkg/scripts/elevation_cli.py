@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64
+from sensor_msgs.msg import NavSatFix
 from assignment_pkg.srv import Elevation_srv, Elevation_srvRequest, Elevation_srvResponse
 import geopandas as gpd
 import fiona
 from shapely.geometry import Point
 import os
-import time
 
 from AirSimWrapper import AirSimWrapper
 from Logger import Logger
@@ -35,7 +35,10 @@ class ElevationClient:
 		# Publishers
 		self.elevation_pub = rospy.Publisher('/elevation_limit', Float64, queue_size=1)
 
-		time.sleep(1)
+		# Subscribers
+		rospy.Subscriber('/airsim_node/Drone/global_gps', NavSatFix, self.set_gps)
+
+		self.gps = None
 
 		# Initialize timer to check GPS data
 		rospy.Timer(rospy.Duration(5), self.check_gps)
@@ -54,12 +57,18 @@ class ElevationClient:
 		path_to_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'maps', filename)
 		fiona.supported_drivers['KML'] = 'rw'
 		self.restriction_areas = gpd.read_file(path_to_file, driver='KML')
+		self.__logger.loginfo('KML file loaded.')
+
+
+	def set_gps(self, msg):
+		self.gps = msg
+		self.__logger.loginfo(f'GPS data received: {msg.latitude}, {msg.longitude}')
 
 
 	def check_gps(self, event):
 		# Get current GPS data
 		gps_data = self.airsim.get_gps_data()
-		#self.__logger.loginfo(f'Current altitude: {abs(gps_data.gnss.geo_point.altitude)}')
+		self.__logger.loginfo(f'GPS data from AirSim: {gps_data.gnss.geo_point.latitude}, {gps_data.gnss.geo_point.longitude}')
 
 		# Check if the drone is within a flight restriction area, and if so, get the current altitude limit
 		is_in_area = self.restriction_areas.contains(Point(gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.latitude))
