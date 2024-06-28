@@ -37,8 +37,8 @@ class GlobalPlanner:
 		rospy.Subscriber('/vel_cmd', VelCmd, self.set_vel)
 
 		# Vars for altitude handling
-		self.curr_limit = 0.0
-		self.prev_limit = -1.0
+		self.curr_alt_limit = 0.0
+		self.prev_alt_limit = -1.0
 		self.alt_threshold = 5.0
 		
 		# Vars for handling movements in X-Y plane
@@ -48,12 +48,13 @@ class GlobalPlanner:
 		self.vel_cmd = np.array([0, 0])
 		self.prev_vel_cmd = np.array([-1, -1])
 		self.goal_reached = False
+		self.start_z = None
 
 		self.goal_pos = self.ue_to_airsim(self.goal, self.start_loc)
 
 		# Start control loop
 		self.tmr = rospy.Timer(rospy.Duration(1), self.control_loop)
-		self.airsim.land()
+		#self.airsim.land()
 
 
 	def __load_params(self):
@@ -74,9 +75,9 @@ class GlobalPlanner:
 		self.vel_cmd = np.array([msg.vx, msg.vy])
 
 
-	def update_elevation(self, data):
-		self.curr_limit = -25
-		self.can_move_xy = False if self.curr_limit != self.prev_limit else True
+	def update_elevation(self, msg):
+		self.curr_alt_limit = -msg.data
+		self.can_move_xy = False if self.curr_alt_limit != self.prev_alt_limit else True
 
 
 	def ue_to_airsim(self, end, start):
@@ -90,24 +91,28 @@ class GlobalPlanner:
 
 	def control_loop(self, event):
 		curr_pos = self.airsim.get_drone_position()
+		
+		if self.start_z is None:
+			self.start_z = curr_pos[-1]
 
 		# Loop while drone is far from goal
-		if np.linalg.norm(curr_pos - self.goal_pos) > self.goal_threshold:
+		if np.linalg.norm(curr_pos[:-1] - self.goal_pos) > self.goal_threshold:
 			yaw = math.atan2(self.goal_pos[1] - curr_pos[1], self.goal_pos[0] - curr_pos[0]) * 180 / math.pi
 			if self.can_move_xy:
 				self.airsim.move_vel(self.vel_cmd)
 				if abs(yaw) - abs(self.airsim.get_yaw()) > 5:					
 					self.airsim.set_yaw(yaw)
-					self.__logger.loginfo("ADJUSTING YAW...")
-				#else:
-				self.__logger.loginfo("MOVING...")
+					#self.__logger.loginfo("ADJUSTING YAW...")
+
+				#self.__logger.loginfo("MOVING...")
 			else:
-				self.__logger.loginfo("ELEVATING...")
-				self.airsim.move_z(self.curr_limit-self.alt_threshold)
-				self.prev_limit = self.curr_limit
+				#self.__logger.loginfo("ELEVATING...")
+				self.__logger.loginfo(f"Curr Z: {curr_pos[-1]}")
+				self.__logger.loginfo(f"Curr Z limit: {self.curr_alt_limit}")
+				self.airsim.move_z(self.curr_alt_limit+self.alt_threshold+abs(self.start_z))
+				self.prev_alt_limit = self.curr_alt_limit
 		else:
 			self.__logger.loginfo("Goal reached!!!")
-			self.tmr.shutdown()
 
 
 def main():

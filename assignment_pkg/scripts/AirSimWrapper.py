@@ -3,7 +3,6 @@
 import airsim
 import time
 import numpy as np
-import math
 
 class AirSimWrapper:
     def __init__(self, host, port):
@@ -28,27 +27,24 @@ class AirSimWrapper:
 
     def takeoff(self):
         self.client.takeoffAsync().join()
-        time.sleep(1)
     
     def land(self):
         self.client.landAsync().join()
-        time.sleep(3)
     
     def get_drone_position(self):
         pose = self.client.simGetVehiclePose()
-        return np.array([pose.position.x_val, pose.position.y_val])
+        return np.array([pose.position.x_val, pose.position.y_val, pose.position.z_val])
 
     def move_vel(self, vel):
         self.client.moveByVelocityBodyFrameAsync(vel[0], vel[1], 0, 1)
 
     def set_yaw(self, yaw):
         self.client.rotateToYawAsync(yaw).join()
-        time.sleep(1)
 
     def get_yaw(self):
         orientation_quat = self.client.simGetVehiclePose().orientation
         yaw = airsim.to_eularian_angles(orientation_quat)[2]
-        return yaw * 180/math.pi
+        return np.degrees(yaw)
 
     def get_gps_data(self):
         return self.client.getGpsData(gps_name = '', vehicle_name = '')

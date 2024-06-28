@@ -16,9 +16,10 @@ class ElevationService:
 		self.__logger = Logger(self._node_name)
 		self.__logger.loginfo("Node started.")
 
+		self.err_code = -5
+
 		# Init service
-		rospy.Service('elevation_srv', Elevation_srv, self.get_elevation)
-		self.__logger.loginfo('Service is ready to provide data.')
+		rospy.Service('elevation_srv', Elevation_srv, self.get_elevation)	
 
 
 	def get_elevation(self, req):
@@ -32,14 +33,12 @@ class ElevationService:
 			data = response.json()
 			if 'results' in data and len(data['results']) > 0:
 				res_srv.elevation = float(data['results'][0]['elevation'])
-				if res_srv.elevation == -1:
-					res_srv.elevation = 0
 			else:
 				self.__logger.logerr('No results found for the provided coordinates.')
-				res_srv.elevation = 0
+				res_srv.elevation = self.err_code
 		else:
 			self.__logger.logerr(f'Error occurred while fetching data: {response.status_code}')
-			res_srv.elevation = 0
+			res_srv.elevation = self.err_code
 
 		return res_srv
 
