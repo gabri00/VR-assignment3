@@ -46,8 +46,6 @@ class GlobalPlanner:
 		self.goal_threshold = 5.0
 		self.can_move_xy = False
 		self.vel_cmd = np.array([0, 0])
-		self.prev_vel_cmd = np.array([-1, -1])
-		self.goal_reached = False
 		self.start_z = None
 
 		self.goal_pos = self.ue_to_airsim(self.goal, self.start_loc)
@@ -83,10 +81,10 @@ class GlobalPlanner:
 	def ue_to_airsim(self, end, start):
 		return np.array(np.subtract(end, start) / 100)
 	
-	
-	def get_vec(self, start, end):
-		v = end - start
-		return v / np.linalg.norm(v)
+
+	# def get_vec(self, start, end):
+	# 	v = end - start
+	# 	return v / np.linalg.norm(v)
 
 
 	def control_loop(self, event):
@@ -107,9 +105,11 @@ class GlobalPlanner:
 				#self.__logger.loginfo("MOVING...")
 			else:
 				#self.__logger.loginfo("ELEVATING...")
-				self.__logger.loginfo(f"Curr Z: {curr_pos[-1]}")
-				self.__logger.loginfo(f"Curr Z limit: {self.curr_alt_limit}")
-				self.airsim.move_z(self.curr_alt_limit+self.alt_threshold+abs(self.start_z))
+				self.__logger.loginfo(f"Current Z: {curr_pos[-1]}")
+				self.__logger.loginfo(f"LIMIT: {self.curr_alt_limit}")
+				if self.curr_alt_limit != self.prev_alt_limit:
+					self.airsim.move_z(self.curr_alt_limit+self.alt_threshold+abs(self.start_z))
+					self.__logger.loginfo(f"Moving to {self.curr_alt_limit+self.alt_threshold+abs(self.start_z)}")
 				self.prev_alt_limit = self.curr_alt_limit
 		else:
 			self.__logger.loginfo("Goal reached!!!")
