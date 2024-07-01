@@ -144,7 +144,7 @@ class GlobalPlanner:
             else:
                 self.__logger.loginfo("Recharge station reached. Recharging...")
                 self.battery = 100.0  # Reset battery to full after reaching recharge station
-                self.target_pos = self.decide_target()
+                # self.target_pos = self.decide_target()
 
 def main():
     GlobalPlanner('global_planner')
