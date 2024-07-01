@@ -53,12 +53,12 @@ class GlobalPlanner:
 
 		#################################################
 		# Battery and payload parameters
-        self.battery = 100.0  # Initial battery percentage
-        self.payload_weight = 10.0  # Weight of the payload in kg
-        self.battery_consumption_rate = 0.1  # Base battery consumption rate per second
+        	self.battery = 100.0  # Initial battery percentage
+        	self.payload_weight = 10.0  # Weight of the payload in kg
+        	self.battery_consumption_rate = 0.1  # Base battery consumption rate per second
 
-        # Weather parameters
-        self.weather_impact = 5.0  # Parameter representing the impact of weather conditions
+        	# Weather parameters
+        	self.weather_impact = 5.0  # Parameter representing the impact of weather conditions
 
 
 
@@ -66,7 +66,7 @@ class GlobalPlanner:
 		self.tmr = rospy.Timer(rospy.Duration(1), self.control_loop)
 		
 		# Start battery update loop
-        self.battery_tmr = rospy.Timer(rospy.Duration(2), self.update_battery)
+        	self.battery_tmr = rospy.Timer(rospy.Duration(2), self.update_battery)
 
 
 	def __load_params(self):
@@ -82,18 +82,18 @@ class GlobalPlanner:
 
 
 	def calcola_consumo_batteria_per_distanza(self, peso, condizioni_atmosferiche):
-        return 0.05 * peso + 0.03 * condizioni_atmosferiche
+        	return 0.05 * peso + 0.03 * condizioni_atmosferiche
 
-    def update_battery(self, event):
-        # Calculate battery consumption based on payload and weather conditions
-        consumo_per_distanza = self.calcola_consumo_batteria_per_distanza(self.payload_weight, self.weather_impact)
-        consumption = consumo_per_distanza * 2
-        self.battery -= consumption
-        self.__logger.loginfo(f"Battery updated: {self.battery}% remaining. Consumption rate: {consumption}% per interval.")
-        if self.battery <= 0:
-            self.__logger.logerr("Battery depleted. Landing...")
-            self.airsim.land()
-            rospy.signal_shutdown("Battery depleted.")
+    	def update_battery(self, event):
+	        # Calculate battery consumption based on payload and weather conditions
+	        consumo_per_distanza = self.calcola_consumo_batteria_per_distanza(self.payload_weight, self.weather_impact)
+	        consumption = consumo_per_distanza * 2
+	        self.battery -= consumption
+	        self.__logger.loginfo(f"Battery updated: {self.battery}% remaining. Consumption rate: {consumption}% per interval.")
+	        if self.battery <= 0:
+	            self.__logger.logerr("Battery depleted. Landing...")
+	            self.airsim.land()
+	            rospy.signal_shutdown("Battery depleted.")
 
 
 	def set_vel(self, msg):
@@ -106,42 +106,42 @@ class GlobalPlanner:
 
 
 	def control_loop(self, event):
-        curr_pos = self.airsim.get_drone_position()
-        distanza_goal = self.distance_to_goal(curr_pos, self.goal_pos)
-        distanza_rifornimento = self.distance_to_goal(curr_pos, self.recharge_pos)
-
-        consumo_per_distanza = self.calcola_consumo_batteria_per_distanza(self.payload_weight, self.weather_impact)
-        distanza_massima = (self.battery - 20) / consumo_per_distanza  # 20% is the battery threshold for returning
-
-        if distanza_goal <= distanza_massima:
-            target_pos = self.goal_pos
-            self.__logger.loginfo("Battery sufficient to reach the goal. Heading to the goal.")
-        else:
-            target_pos = self.recharge_pos
-            self.__logger.loginfo("Battery not sufficient to reach the goal. Heading to the recharge station.")
-
-        if np.linalg.norm(curr_pos - target_pos[:-1]) > self.goal_threshold:
-            yaw = np.degrees(math.atan2(target_pos[1] - curr_pos[1], target_pos[0] - curr_pos[0]))
-            if self.can_move_xy:
-                if abs(yaw) - abs(self.airsim.get_yaw()) > self.yaw_threshold:
-                    self.__logger.loginfo("Adjusting yaw...")                
-                    self.airsim.set_yaw(yaw)
-                else:
-                    self.__logger.loginfo("Moving...")
-                    self.airsim.move_vel(self.vel_cmd)
-            else:
-                self.__logger.loginfo(f"LIMIT: {self.curr_alt_limit}")
-                if self.curr_alt_limit != self.prev_alt_limit:
-                    self.__logger.loginfo("Elevating...")
-                    self.airsim.move_z(self.curr_alt_limit + self.alt_threshold)
-                self.prev_alt_limit = self.curr_alt_limit
-        else:
-            self.airsim.move_z(target_pos[-1])
-            if np.array_equal(target_pos, self.goal_pos):
-                self.__logger.loginfo("Goal reached!!!")
-            else:
-                self.__logger.loginfo("Recharge station reached. Recharging...")
-                self.battery = 100.0  # Reset battery to full after reaching recharge station
+	        curr_pos = self.airsim.get_drone_position()
+	        distanza_goal = self.distance_to_goal(curr_pos, self.goal_pos)
+	        distanza_rifornimento = self.distance_to_goal(curr_pos, self.recharge_pos)
+	
+	        consumo_per_distanza = self.calcola_consumo_batteria_per_distanza(self.payload_weight, self.weather_impact)
+	        distanza_massima = (self.battery - 20) / consumo_per_distanza  # 20% is the battery threshold for returning
+	
+	        if distanza_goal <= distanza_massima:
+	            target_pos = self.goal_pos
+	            self.__logger.loginfo("Battery sufficient to reach the goal. Heading to the goal.")
+	        else:
+	            target_pos = self.recharge_pos
+	            self.__logger.loginfo("Battery not sufficient to reach the goal. Heading to the recharge station.")
+	
+	        if np.linalg.norm(curr_pos - target_pos[:-1]) > self.goal_threshold:
+	            yaw = np.degrees(math.atan2(target_pos[1] - curr_pos[1], target_pos[0] - curr_pos[0]))
+	            if self.can_move_xy:
+	                if abs(yaw) - abs(self.airsim.get_yaw()) > self.yaw_threshold:
+	                    self.__logger.loginfo("Adjusting yaw...")                
+	                    self.airsim.set_yaw(yaw)
+	                else:
+	                    self.__logger.loginfo("Moving...")
+	                    self.airsim.move_vel(self.vel_cmd)
+	            else:
+	                self.__logger.loginfo(f"LIMIT: {self.curr_alt_limit}")
+	                if self.curr_alt_limit != self.prev_alt_limit:
+	                    self.__logger.loginfo("Elevating...")
+	                    self.airsim.move_z(self.curr_alt_limit + self.alt_threshold)
+	                self.prev_alt_limit = self.curr_alt_limit
+	        else:
+	            self.airsim.move_z(target_pos[-1])
+	            if np.array_equal(target_pos, self.goal_pos):
+	                self.__logger.loginfo("Goal reached!!!")
+	            else:
+	                self.__logger.loginfo("Recharge station reached. Recharging...")
+	                self.battery = 100.0  # Reset battery to full after reaching recharge station
 
 
 
