@@ -44,22 +44,27 @@ class GlobalPlanner:
 		self.alt_threshold = 5.0
 		
 		# Vars for handling movements in X-Y plane
-		self.goal_threshold = 3.0
+		self.goal_threshold = 4.0
 		self.yaw_threshold = 5.0
 		self.can_move_xy = False
 		self.vel_cmd = np.array([0, 0])
 
 		self.payload_weight = 4.0 # Weight of the payload in kg
 		self.drone_weight = 2.0 # Weight of the drone in kg
-		self.autonomy = 100 / (0.05 * (self.payload_weight + self.drone_weight) + self.weather_value) # Autonomy in meters
+		self.autonomy = 100 / (0.03 * (self.payload_weight + self.drone_weight) + self.weather_value) # Autonomy in meters
+		self.__logger.loginfo(f"Battery autonomy: {self.autonomy} [m]")
 
-		self.goal_pos = self.airsim.get_obj_position("StaticMeshActor_3")
+		self.goal_pos = self.airsim.get_obj_position("Waypoint_BP_C_4")
 
 		# Get recharge stations position
-		self.recharge_objs = ["StaticMeshActor_0", "StaticMeshActor_1", "StaticMeshActor_2"]
+		self.__logger.loginfo(f"{self.airsim.client.simListSceneObjects()}")
+		self.recharge_objs = ["Waypoint_BP_C_1"]
 		self.recharge_pos = []
 		for i in self.recharge_objs:
 			self.recharge_pos.append(self.airsim.get_obj_position(i))
+		self.recharge_pos = np.array(self.recharge_pos)
+		
+		self.target_pos = self.decide_target()
 
 		# Start control loop
 		rospy.Timer(rospy.Duration(1), self.control_loop)
@@ -91,23 +96,25 @@ class GlobalPlanner:
 		goal_dist = np.linalg.norm(curr_pos - self.goal_pos[:-1])
 		# Get dist from drone to each recharge station
 		recharge_dist = []
-		for i in range(0, 4):
+		for i in range(0, len(self.recharge_pos)):
 			recharge_dist.append(np.linalg.norm(curr_pos - self.recharge_pos[i][:-1]))
 
 		if goal_dist <= self.autonomy:
-			self.__logger.loginfo("Battery sufficient to reach the goal. Heading to the goal.")
+			self.__logger.loginfo("Heading to the goal...")
 			return self.goal_pos
 		else:
 			# Get the closest recharge station
+			if len(self.recharge_pos) == 0:
+				self.__logger.logerr("Goal can't be reached!")
+				rospy.signal_shutdown("Goal can't be reached!")
 			target = self.recharge_pos[recharge_dist.index(min(recharge_dist))]
-			self.__logger.loginfo("Battery not sufficient to reach the goal. Heading to a recharge station.")
-			return target
+			self.__logger.loginfo("Heading to a recharge station...")
+			return np.array(target)
 
 
 	def control_loop(self, event):
-		self.target_pos = self.decide_target()
-
 		curr_pos = self.airsim.get_drone_position()
+		self.__logger.loginfo(f"{self.target_pos}")
 
 		# Loop while drone is far from goal
 		if np.linalg.norm(curr_pos - self.target_pos[:-1]) > self.goal_threshold:
@@ -116,8 +123,6 @@ class GlobalPlanner:
 				if abs(yaw) - abs(self.airsim.get_yaw()) > self.yaw_threshold:
 					self.__logger.loginfo("Adjusting yaw...")				
 					self.airsim.set_yaw(yaw)
-				else:
-					self.__logger.loginfo("Moving...")
 
 				self.airsim.move_vel(self.vel_cmd)
 			else:
@@ -134,7 +139,12 @@ class GlobalPlanner:
 				rospy.signal_shutdown("Goal reached!!!")
 			else:
 				self.__logger.loginfo("Waypoint reached!!!")
+				self.target_pos = self.decide_target()
+				mask = ~np.all(self.recharge_pos == self.target_pos, axis=1)
+				self.recharge_pos = self.recharge_pos[mask]
+				self.can_move_xy = False
 				self.prev_alt_limit = -1.0
+				self.curr_alt_limit = -25.0
 
 
 def main():
