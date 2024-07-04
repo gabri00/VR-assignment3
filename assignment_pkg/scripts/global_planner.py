@@ -57,8 +57,7 @@ class GlobalPlanner:
 
 
 		# Get recharge stations position
-		self.__logger.loginfo(f"{self.airsim.client.simListSceneObjects()}")
-		self.recharge_objs = ["Waypoint_BP_C_1"]
+		self.recharge_objs = "Waypoint_BP_C_1"
 		self.recharge_pos = np.array([])
 		self.goal_pos = np.array([0, 0, 0])
 
@@ -95,24 +94,30 @@ class GlobalPlanner:
 		self.goal_pos = self.airsim.get_obj_position("Waypoint_BP_C_4")
 		goal_dist = np.linalg.norm(curr_pos - self.goal_pos[:-1])
 		
-		# Get dist from drone to recharge stations
-		recharge_dist = np.array([])
-		for r_obj in self.recharge_objs:
-			np.append(self.recharge_pos, self.airsim.get_obj_position(r_obj))
-		for i in range(0, len(self.recharge_pos)):
-			np.append(recharge_dist, np.linalg.norm(curr_pos - self.recharge_pos[i][:-1]))
-
 		if goal_dist <= self.autonomy - self.dist_threshold:
 			self.__logger.loginfo("Heading to the goal...")
+			
+			self.__logger.loginfo(f"{self.airsim.client.simListSceneObjects()}")
 			return self.goal_pos
 		else:
 			# Get the closest recharge station
-			if len(self.recharge_pos) == 0:
+			if self.recharge_objs == None:
 				self.__logger.logerr("Goal can't be reached!")
 				rospy.signal_shutdown("Goal can't be reached!")
-			target = self.recharge_pos[recharge_dist.index(min(recharge_dist))]
+			
+			# Get dist from drone to recharge stations
+			recharge_dist = 0 # np.array([])
+		#if len(self.recharge_objs) > 0:
+		#	for r_obj in self.recharge_objs:
+		#		self.recharge_pos = np.append(self.recharge_pos, self.airsim.get_obj_position(r_obj))
+			self.recharge_pos = self.airsim.get_obj_position(self.recharge_objs)
+
+			#for i in range(0, len(self.recharge_pos)):
+			#recharge_dist = np.append(recharge_dist, np.linalg.norm(curr_pos - self.recharge_pos[:-1]))
+			recharge_dist = np.linalg.norm(curr_pos - self.recharge_pos[:-1])
+			target = self.recharge_pos #[np.argmin(recharge_dist)]
 			self.__logger.loginfo("Heading to a recharge station...")
-			return np.array(target)
+			return target
 
 
 	def control_loop(self, event):
@@ -142,9 +147,9 @@ class GlobalPlanner:
 				rospy.signal_shutdown("Goal reached!!!")
 			else:
 				self.__logger.loginfo("Waypoint reached!!!")
+				#mask = ~np.all(self.recharge_pos == self.target_pos, axis=1)
+				self.recharge_objs = None # self.recharge_objs[mask]
 				self.target_pos = self.decide_target()
-				mask = ~np.all(self.recharge_pos == self.target_pos, axis=1)
-				self.recharge_pos = self.recharge_pos[mask]
 				self.can_move_xy = False
 				self.prev_alt_limit = -1.0
 				self.curr_alt_limit = -25.0
