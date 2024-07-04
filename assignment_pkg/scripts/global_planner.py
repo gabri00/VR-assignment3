@@ -49,21 +49,19 @@ class GlobalPlanner:
 		self.can_move_xy = False
 		self.vel_cmd = np.array([0, 0])
 
-		self.payload_weight = 4.0 # Weight of the payload in kg
-		self.drone_weight = 2.0 # Weight of the drone in kg
-		self.autonomy = 100 / (0.03 * (self.payload_weight + self.drone_weight) + self.weather_value) # Autonomy in meters
-		self.__logger.loginfo(f"Battery autonomy: {self.autonomy} [m]")
+		self.payload_weight = 4.0 # Payload weight [kg]
+		self.drone_weight = 2.0 # Drone weight [kg]
+		self.autonomy = 100 / (0.03 * (self.payload_weight + self.drone_weight) + self.weather_value) # Drone autonomy [m]
+		self.dist_threshold = 0.1 * self.autonomy # Threshold is 10% of the autonomy
+		self.__logger.loginfo(f"Battery autonomy: {self.autonomy - self.dist_threshold} [m]")
 
-		self.goal_pos = self.airsim.get_obj_position("Waypoint_BP_C_4")
 
 		# Get recharge stations position
 		self.__logger.loginfo(f"{self.airsim.client.simListSceneObjects()}")
 		self.recharge_objs = ["Waypoint_BP_C_1"]
-		self.recharge_pos = []
-		for i in self.recharge_objs:
-			self.recharge_pos.append(self.airsim.get_obj_position(i))
-		self.recharge_pos = np.array(self.recharge_pos)
-		
+		self.recharge_pos = np.array([])
+		self.goal_pos = np.array([0, 0, 0])
+
 		self.target_pos = self.decide_target()
 
 		# Start control loop
@@ -92,14 +90,19 @@ class GlobalPlanner:
 
 	def decide_target(self):
 		curr_pos = self.airsim.get_drone_position()
-		
-		goal_dist = np.linalg.norm(curr_pos - self.goal_pos[:-1])
-		# Get dist from drone to each recharge station
-		recharge_dist = []
-		for i in range(0, len(self.recharge_pos)):
-			recharge_dist.append(np.linalg.norm(curr_pos - self.recharge_pos[i][:-1]))
 
-		if goal_dist <= self.autonomy:
+		# Get dist from drone to goal
+		self.goal_pos = self.airsim.get_obj_position("Waypoint_BP_C_4")
+		goal_dist = np.linalg.norm(curr_pos - self.goal_pos[:-1])
+		
+		# Get dist from drone to recharge stations
+		recharge_dist = np.array([])
+		for r_obj in self.recharge_objs:
+			np.append(self.recharge_pos, self.airsim.get_obj_position(r_obj))
+		for i in range(0, len(self.recharge_pos)):
+			np.append(recharge_dist, np.linalg.norm(curr_pos - self.recharge_pos[i][:-1]))
+
+		if goal_dist <= self.autonomy - self.dist_threshold:
 			self.__logger.loginfo("Heading to the goal...")
 			return self.goal_pos
 		else:
