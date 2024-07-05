@@ -25,15 +25,16 @@ class LocalPlanner:
 		# Initialize AirSim wrapper
 		self.airsim = AirSimWrapper(self.host, self.port)
 
-		# Define subscribers
+		# Subscribers
 		rospy.Subscriber('/airsim_node/Drone/lidar/Lidar1', PointCloud2, self.get_sensor_data)
 
-		# Define publishers
+		# Publishers
 		self.vel_cmd_pub = rospy.Publisher('/vel_cmd', VelCmd, queue_size=1)
 
 		# Vars for obstacle avoidance
 		self.sensor_data = None
 		self.vel = 5.0
+		self.front_th = 1.2
 		self.obst_th = 20.0
 
 
@@ -67,28 +68,23 @@ class LocalPlanner:
 		f_dist = np.array([])
 
 		for i in range(0, self.sensor_data.shape[0]):
-			if self.sensor_data[i][1] < -1: 		# y < -1
+			if self.sensor_data[i][1] < -self.front_th:		# y < -1
 				l_dist = np.append(l_dist, distances[i])
-			elif self.sensor_data[i][1] > 1: 		# y > 1
+			elif self.sensor_data[i][1] > self.front_th:	# y > 1
 				r_dist = np.append(r_dist, distances[i])
-			else: 									# -1 <= y <= 1
+			else:											# -1 <= y <= 1
 				f_dist = np.append(f_dist, distances[i])
 
-		# Select only distances too close
+		# Get only distances below threshold
 		f_dist = f_dist[f_dist < self.obst_th]
-
-		#self.__logger.loginfo(f"FRONT: {f_dist}")
-		#self.__logger.loginfo(f"LEFT: {l_dist}")
-		#self.__logger.loginfo(f"RIGHT: {r_dist}")
 
 		turn_sgn = 1 if sum(r_dist) > sum(l_dist) else -1
 
-		#self.__logger.loginfo(f"SIGN: {turn_sgn}")
-
+		# Publish velocity command
 		vel_msg = VelCmd()
 
 		if f_dist.size:
-			self.__logger.loginfo(f"OBSTACLE DETECTED")
+			self.__logger.loginfo(f"Obstace detected at {np.min(f_dist)} m")
 			vel_msg.vx = 0
 			vel_msg.vy = turn_sgn * self.vel
 		else:

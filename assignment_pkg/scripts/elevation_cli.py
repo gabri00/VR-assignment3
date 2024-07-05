@@ -3,11 +3,12 @@
 import rospy
 from std_msgs.msg import Float64
 from assignment_pkg.srv import Elevation_srv, Elevation_srvRequest, Elevation_srvResponse
+
 import geopandas as gpd
 import fiona
 from shapely.geometry import Point
 import os
-import time
+
 from AirSimWrapper import AirSimWrapper
 from Logger import Logger
 
@@ -30,6 +31,9 @@ class ElevationClient:
 		# Wait for elevation service
 		rospy.wait_for_service('elevation_srv')
 		self.__logger.loginfo("Elevation service ready.")
+
+		# Error code if elevation can't be retreived
+		self.err_code = -5
 
 		# Publishers
 		self.elevation_pub = rospy.Publisher('/elevation_limit', Float64, queue_size=1)
@@ -57,28 +61,28 @@ class ElevationClient:
 	def check_gps(self, event):
 		gps_data = self.airsim.get_gps_data()
 
-		# Check if the drone is within a flight restriction area, and if so, get the current altitude limit
+		# Check if the drone is within a flight restriction area, and if so, get the current altitude limit in that point
 		is_in_area = self.restriction_areas.contains(Point(gps_data.gnss.geo_point.longitude, gps_data.gnss.geo_point.latitude))
 
 		if is_in_area.any():
 			self.__logger.logwarn('Drone IN restriction area')
 			area_limit = int(self.restriction_areas[is_in_area]['Description'].iloc[0])
 		else:
-			area_limit = 120
+			area_limit = 120 # Max area limit if no limit is defined
 
+		# Call service to get elevation for the given coordinates
 		try:
 			elevation_cli = rospy.ServiceProxy('elevation_srv', Elevation_srv)
 			resp = elevation_cli(float(gps_data.gnss.geo_point.latitude), float(gps_data.gnss.geo_point.longitude))
 		except rospy.ServiceException as e:
 			self.__logger.logerr(f'Service call failed: {e}')
 
-		if resp.elevation == -5:
+		# If no elevation has been received, set default elevation to 0
+		if resp.elevation == self.err_code:
 			resp.elevation = 0
 			self.__logger.logerr('Cannot retrieve correct elevation, setting default.')
 
 		curr_limit = resp.elevation + area_limit
-
-		# Publish current altitude limit
 		self.elevation_pub.publish(curr_limit)
 
 

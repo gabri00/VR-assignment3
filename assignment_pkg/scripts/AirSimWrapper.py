@@ -35,8 +35,8 @@ class AirSimWrapper:
         return np.array([pose.position.x_val, pose.position.y_val])
     
     def get_obj_position(self, obj_name):
-    	pose = self.client.simGetObjectPose(obj_name)
-    	return np.array([pose.position.x_val, pose.position.y_val, pose.position.z_val])
+        pose = self.client.simGetObjectPose(obj_name)
+        return np.array([pose.position.x_val, pose.position.y_val, pose.position.z_val])
 
     def move_vel(self, vel):
         self.client.moveByVelocityBodyFrameAsync(vel[0], vel[1], 0, 1)

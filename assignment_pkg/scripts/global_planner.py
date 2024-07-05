@@ -2,7 +2,6 @@
 
 import numpy as np
 import rospy
-import math
 from std_msgs.msg import Float64
 from assignment_pkg.msg import VelCmd
 
@@ -24,7 +23,6 @@ class GlobalPlanner:
 		
 		# Initialize AirSim wrapper
 		self.airsim = AirSimWrapper(self.host, self.port)
-		#self.airsim.takeoff()
 		self.__logger.loginfo("Drone ready.")
 
 		# Set weather conditions
@@ -39,28 +37,29 @@ class GlobalPlanner:
 		rospy.Subscriber('/vel_cmd', VelCmd, self.set_vel)
 
 		# Vars for altitude handling
-		self.curr_alt_limit = -25.0
-		self.prev_alt_limit = -1.0
-		self.alt_threshold = 5.0
+		self.curr_alt_limit = -25.0 # [m]
+		self.prev_alt_limit = -1.0	# [m]
+		self.alt_threshold = 5.0	# [m]
 		
-		# Vars for handling movements in X-Y plane
-		self.goal_threshold = 4.0
-		self.yaw_threshold = 5.0
-		self.can_move_xy = False
+		# Vars for handling movements in XY plane
+		self.goal_threshold = 4.0	# [m]
+		self.yaw_threshold = 5.0	# [deg]
+		self.can_move_xy = False	# Flag to allow XY movements
 		self.vel_cmd = np.array([0, 0])
 
-		self.payload_weight = 4.0 # Payload weight [kg]
-		self.drone_weight = 2.0 # Drone weight [kg]
-		self.autonomy = 100 / (0.03 * (self.payload_weight + self.drone_weight) + self.weather_value) # Drone autonomy [m]
+		# Vars for drone autonomy
+		self.payload_weight = 4.0	# [kg]
+		self.drone_weight = 2.0		# [kg]
+		self.autonomy = 100 / (0.03 * (self.payload_weight + self.drone_weight) + self.weather_value) # [m]
 		self.dist_threshold = 0.1 * self.autonomy # Threshold is 10% of the autonomy
-		self.__logger.loginfo(f"Battery autonomy: {self.autonomy - self.dist_threshold} [m]")
-
+		self.__logger.loginfo(f"Battery autonomy: {self.autonomy - self.dist_threshold} m")
 
 		# Get recharge stations position
 		self.recharge_objs = "Waypoint_BP_C_1"
 		self.recharge_pos = np.array([])
 		self.goal_pos = np.array([0, 0, 0])
 
+		# Select target where drone will move (goal or recharge station)
 		self.target_pos = self.decide_target()
 
 		# Start control loop
@@ -126,7 +125,7 @@ class GlobalPlanner:
 
 		# Loop while drone is far from goal
 		if np.linalg.norm(curr_pos - self.target_pos[:-1]) > self.goal_threshold:
-			yaw = np.degrees(math.atan2(self.target_pos[1] - curr_pos[1], self.target_pos[0] - curr_pos[0]))
+			yaw = np.degrees(np.arctan2(self.target_pos[1] - curr_pos[1], self.target_pos[0] - curr_pos[0]))
 			if self.can_move_xy:
 				if abs(yaw) - abs(self.airsim.get_yaw()) > self.yaw_threshold:
 					self.__logger.loginfo("Adjusting yaw...")				
