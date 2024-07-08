@@ -130,8 +130,8 @@ In the launch file you can customize some parameters that will slightly change t
 - `weather`: to enable weather effects (see [allowed effects](https://microsoft.github.io/AirSim/apis/#weather-apis))
 - `weather_value`: to set the turbulence level (from 0 to 1)
 
-## ROS architecture
-
+## Software Architecture
+![ROS Architecture](UML_VR.drawio.png)
 
 
 ## Problems and solution adopted
