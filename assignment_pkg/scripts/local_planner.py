@@ -84,7 +84,7 @@ class LocalPlanner:
 		vel_msg = VelCmd()
 
 		if f_dist.size:
-			self.__logger.loginfo(f"Obstace detected at {np.min(f_dist)} m")
+			self.__logger.loginfo(f"Obstace detected at {np.min(f_dist):.2f} m")
 			vel_msg.vx = 0
 			vel_msg.vy = turn_sgn * self.vel
 		else:

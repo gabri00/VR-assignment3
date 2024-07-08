@@ -65,7 +65,7 @@ class GlobalPlanner:
 		self.target_pos = self.decide_target()
 
 		# Start control loop
-		rospy.Timer(rospy.Duration(2), self.control_loop)
+		rospy.Timer(rospy.Duration(1), self.control_loop)
 
 
 	def __load_params(self):
@@ -124,8 +124,7 @@ class GlobalPlanner:
 		if np.linalg.norm(curr_pos - self.target_pos[:-1]) > self.goal_threshold:
 			yaw = np.degrees(np.arctan2(self.target_pos[1] - curr_pos[1], self.target_pos[0] - curr_pos[0]))
 			if self.can_move_xy:
-				self.__logger.loginfo(f"YAW: {abs(yaw) - abs(self.airsim.get_yaw())}")
-				if abs(yaw) - abs(self.airsim.get_yaw()) > self.yaw_threshold:
+				if abs(abs(yaw) - abs(self.airsim.get_yaw())) > self.yaw_threshold:
 					self.__logger.loginfo("Adjusting yaw...")				
 					self.airsim.set_yaw(yaw)
 				else:
@@ -137,8 +136,8 @@ class GlobalPlanner:
 					self.airsim.move_z(self.curr_alt_limit+self.alt_threshold)
 				self.prev_alt_limit = self.curr_alt_limit
 		else:
-			self.airsim.move_z(self.target_pos[-1] - 5)
-			#time.sleep(2)
+			self.airsim.move_z(self.target_pos[-1])
+			time.sleep(1)
 			# Check if target is the goal
 			if np.array_equal(self.target_pos, self.goal_pos):
 				self.__logger.loginfo("Goal reached!!!")
