@@ -78,7 +78,7 @@ class LocalPlanner:
 		# Get only distances below threshold
 		f_dist = f_dist[f_dist < self.obst_th]
 
-		turn_sgn = 1 if sum(r_dist) > sum(l_dist) else -1
+		turn_sgn = -1 if sum(r_dist) > sum(l_dist) else 1
 
 		# Publish velocity command
 		vel_msg = VelCmd()

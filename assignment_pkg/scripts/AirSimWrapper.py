@@ -39,7 +39,7 @@ class AirSimWrapper:
         return np.array([pose.position.x_val, pose.position.y_val, pose.position.z_val])
 
     def move_vel(self, vel):
-        self.client.moveByVelocityBodyFrameAsync(vel[0], vel[1], 0, 1)
+        self.client.moveByVelocityBodyFrameAsync(vel[0], vel[1], 0, 1).join()
 
     def set_yaw(self, yaw):
         self.client.rotateToYawAsync(yaw).join()
